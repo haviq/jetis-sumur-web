@@ -1,0 +1,12 @@
+next
+node_modules
+.env
+.env.local
+.env*.local
+.DS_Store
+*.pem
+.vercel
+service-account*.json
+google-credentials*.json
+*.tsbuildinfo
+.next

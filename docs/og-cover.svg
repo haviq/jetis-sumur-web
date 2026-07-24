@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <circle cx="980" cy="120" r="180" fill="#34d399" fill-opacity="0.12"/>
+  <circle cx="200" cy="520" r="220" fill="#38bdf8" fill-opacity="0.08"/>
+  <rect x="72" y="72" width="72" height="72" rx="18" fill="#34d399" fill-opacity="0.18" stroke="#34d399" stroke-width="2"/>
+  <text x="90" y="118" font-family="ui-sans-serif,system-ui" font-size="28" font-weight="800" fill="#34d399">JS</text>
+  <text x="72" y="220" font-family="ui-sans-serif,system-ui" font-size="56" font-weight="800" fill="#e8eef7">Jetis Sumur Data</text>
+  <text x="72" y="280" font-family="ui-sans-serif,system-ui" font-size="28" fill="#94a3b8">Pendataan warga · Web operator · Sheets-ready</text>
+  <text x="72" y="360" font-family="ui-sans-serif,system-ui" font-size="20" fill="#64748b">Next.js · TypeScript · Dark emerald · Padukuhan digital</text>
+  <rect x="72" y="420" width="220" height="48" rx="12" fill="#10b981"/>
+  <text x="100" y="451" font-family="ui-sans-serif,system-ui" font-size="18" font-weight="700" fill="#042f2e">MVP Ready</text>
+</svg>

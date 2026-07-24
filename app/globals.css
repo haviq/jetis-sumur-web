@@ -1,0 +1,223 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0b1220;
+  --bg2: #111827;
+  --surface: #151f32;
+  --surface-soft: #1a2740;
+  --border: #243044;
+  --text: #e8eef7;
+  --muted: #94a3b8;
+  --muted2: #64748b;
+  --accent: #34d399;
+  --accent-2: #10b981;
+  --accent-dim: rgba(52, 211, 153, 0.15);
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --radius: 14px;
+}
+
+[data-theme="light"] {
+  --bg: #f4f7fb;
+  --bg2: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #eef2f7;
+  --border: #dbe3ee;
+  --text: #0f172a;
+  --muted: #475569;
+  --muted2: #64748b;
+  --accent: #059669;
+  --accent-2: #047857;
+  --accent-dim: rgba(5, 150, 105, 0.12);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(52, 211, 153, 0.12), transparent 50%),
+    radial-gradient(900px 500px at 100% 0%, rgba(56, 189, 248, 0.08), transparent 45%), var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page {
+  width: min(1120px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.card {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.65rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #042f2e;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+table.data th,
+table.data td {
+  text-align: left;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+table.data th {
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--surface-soft);
+}
+
+table.data tr:hover td {
+  background: color-mix(in srgb, var(--accent-dim) 40%, transparent);
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+}
+
+.brand-mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.7rem;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.75rem;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.nav-links a:hover {
+  color: var(--accent);
+}
+
+.hero-title {
+  font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .stat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
