@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import type { KK, Stats, Pengajuan, Warga, Hubungan, JK, WargaStatus } from '@/lib/types'
+import type { KK, Stats, Pengajuan, Warga, Hubungan, JK, WargaStatus, KKStatus } from '@/lib/types'
 import { maskNik } from '@/lib/utils'
+import { StatusBadge, StatCard } from '@/components/ui'
 
 const HUBUNGAN: Hubungan[] = [
   'Kepala Keluarga',
@@ -34,10 +35,11 @@ export default function OpsDashboard() {
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
   const [rt, setRt] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'' | KKStatus>('')
   const [items, setItems] = useState<KK[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [pengajuan, setPengajuan] = useState<Pengajuan[]>([])
-  const [tab, setTab] = useState<'kk' | 'pengajuan' | 'tambah' | 'import'>('kk')
+  const [tab, setTab] = useState<'kk' | 'pengajuan' | 'tambah' | 'import' | 'demografi'>('kk')
   const [busy, setBusy] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailKk, setDetailKk] = useState<KK | null>(null)
@@ -63,6 +65,7 @@ export default function OpsDashboard() {
     const qs = new URLSearchParams()
     if (q) qs.set('q', q)
     if (rt) qs.set('rt', rt)
+    if (statusFilter) qs.set('status', statusFilter)
     const [kkRes, stRes, pgRes, healthRes] = await Promise.all([
       fetch(`/api/kk?${qs}`, { credentials: 'include' }),
       fetch('/api/kk?kind=stats', { credentials: 'include' }),
@@ -82,7 +85,7 @@ export default function OpsDashboard() {
     if (pg.ok) setPengajuan(pg.items || [])
     if (health?.sheets?.message) setSheetsMsg(health.sheets.message)
     setAuthed(true)
-  }, [q, rt])
+  }, [q, rt, statusFilter])
 
   const loadDetail = useCallback(async (id: string) => {
     const r = await fetch(`/api/warga?id=${encodeURIComponent(id)}`, { credentials: 'include' })
@@ -121,7 +124,7 @@ export default function OpsDashboard() {
 
   useEffect(() => {
     if (authed) void refresh()
-  }, [q, rt, authed, refresh])
+  }, [q, rt, statusFilter, authed, refresh])
 
   useEffect(() => {
     if (selectedId) void loadDetail(selectedId)
@@ -277,25 +280,29 @@ export default function OpsDashboard() {
 
   if (booting && !authed) {
     return (
-      <div className="page py-16 text-center">
-        <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          Memuat…
-        </p>
-        <button type="button" className="btn btn-ghost mt-3" onClick={() => setBooting(false)}>
-          Lewati
-        </button>
+      <div className="ops-shell login-shell">
+        <div className="text-center space-y-3">
+          <div className="brand-mark mx-auto">JS</div>
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>
+            Memuat panel…
+          </p>
+          <button type="button" className="btn btn-ghost" onClick={() => setBooting(false)}>
+            Lewati
+          </button>
+        </div>
       </div>
     )
   }
 
   if (!authed) {
     return (
-      <div className="page py-16 max-w-md mx-auto">
-        <form onSubmit={login} className="card p-6 space-y-4">
-          <div>
-            <h1 className="text-xl font-bold">Akses operator</h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
-              Panel internal — tidak dipublikasikan di navigasi situs.
+      <div className="ops-shell login-shell">
+        <form onSubmit={login} className="card p-6 md:p-7 space-y-4 w-full max-w-md glow-ring">
+          <div className="space-y-2">
+            <div className="brand-mark">JS</div>
+            <h1 className="text-xl font-extrabold tracking-tight">Akses operator</h1>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>
+              Panel internal pendataan — tidak dipublikasikan di navigasi situs.
             </p>
           </div>
           <div>
@@ -311,6 +318,7 @@ export default function OpsDashboard() {
               required
               minLength={4}
               autoFocus
+              autoComplete="current-password"
             />
           </div>
           {error && (
@@ -326,50 +334,44 @@ export default function OpsDashboard() {
     )
   }
 
+  const maxAge = Math.max(1, ...(stats?.ageBuckets || []).map((b) => b.count))
+  const maxRt = Math.max(1, ...(stats?.perRt || []).map((r) => r.jiwa))
+
   return (
-    <div className="page py-8 space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold">Panel operator</h1>
-          <p className="text-sm" style={{ color: 'var(--muted)' }}>
-            Mode: {stats?.mode || '…'} · {stats?.totalKk ?? 0} KK · {stats?.totalJiwa ?? 0} jiwa
-          </p>
-          {sheetsMsg && (
-            <p className="text-xs mt-1" style={{ color: 'var(--muted2)' }}>
-              {sheetsMsg}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <a className="btn btn-ghost text-sm" href="/api/export?type=flat">
-            Export CSV
-          </a>
-          <button type="button" className="btn btn-ghost text-sm" onClick={() => void refresh()}>
-            Refresh
-          </button>
-          <button type="button" className="btn btn-ghost text-sm" onClick={() => void logout()}>
-            Keluar
-          </button>
+    <div className="ops-shell">
+      <div className="ops-topbar">
+        <div className="page-wide py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="brand-mark">JS</span>
+            <div className="min-w-0">
+              <h1 className="text-base md:text-lg font-extrabold truncate">Panel operator</h1>
+              <p className="text-xs truncate" style={{ color: 'var(--muted)' }}>
+                Mode {stats?.mode || '…'} · {stats?.totalKk ?? 0} KK · {stats?.totalJiwa ?? 0} jiwa
+                {sheetsMsg ? ` · ${sheetsMsg}` : ''}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a className="btn btn-ghost text-sm" href="/api/export?type=flat">
+              Export CSV
+            </a>
+            <button type="button" className="btn btn-ghost text-sm" onClick={() => void refresh()}>
+              Refresh
+            </button>
+            <button type="button" className="btn btn-ghost text-sm" onClick={() => void logout()}>
+              Keluar
+            </button>
+          </div>
         </div>
       </div>
 
+      <div className="page-wide py-6 space-y-6">
       {stats && (
         <div className="stat-grid">
-          {[
-            { l: 'KK aktif', v: stats.totalKk },
-            { l: 'Jiwa', v: stats.totalJiwa },
-            { l: 'L / P', v: `${stats.laki}/${stats.perempuan}` },
-            { l: 'Pengajuan', v: stats.pendingPengajuan },
-          ].map((s) => (
-            <div key={s.l} className="card p-4">
-              <p className="text-2xl font-extrabold tabular-nums" style={{ color: 'var(--accent)' }}>
-                {s.v}
-              </p>
-              <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                {s.l}
-              </p>
-            </div>
-          ))}
+          <StatCard label="KK aktif" value={stats.totalKk} />
+          <StatCard label="Jiwa aktif" value={stats.totalJiwa} />
+          <StatCard label="L / P" value={`${stats.laki}/${stats.perempuan}`} />
+          <StatCard label="Pengajuan pending" value={stats.pendingPengajuan} />
         </div>
       )}
 
@@ -377,7 +379,8 @@ export default function OpsDashboard() {
         {(
           [
             ['kk', 'Daftar KK'],
-            ['pengajuan', 'Pengajuan'],
+            ['pengajuan', `Pengajuan${stats?.pendingPengajuan ? ` (${stats.pendingPengajuan})` : ''}`],
+            ['demografi', 'Demografi'],
             ['tambah', 'Tambah KK'],
             ['import', 'Import CSV'],
           ] as const
@@ -385,12 +388,8 @@ export default function OpsDashboard() {
           <button
             key={id}
             type="button"
-            className="btn text-sm"
-            style={{
-              background: tab === id ? 'var(--accent-dim)' : 'transparent',
-              border: `1px solid ${tab === id ? 'var(--accent)' : 'var(--border)'}`,
-              color: tab === id ? 'var(--accent)' : 'var(--text)',
-            }}
+            className="tab-btn"
+            data-active={tab === id ? 'true' : 'false'}
             onClick={() => setTab(id)}
           >
             {label}
@@ -416,8 +415,18 @@ export default function OpsDashboard() {
                   </option>
                 ))}
               </select>
+              <select
+                className="input max-w-[9rem]"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as '' | KKStatus)}
+              >
+                <option value="">Semua status</option>
+                <option value="aktif">Aktif</option>
+                <option value="pindah">Pindah</option>
+                <option value="nonaktif">Nonaktif</option>
+              </select>
             </div>
-            <div className="table-wrap card">
+            <div className="table-wrap">
               <table className="data">
                 <thead>
                   <tr>
@@ -445,14 +454,14 @@ export default function OpsDashboard() {
                       </td>
                       <td>{row.rt}</td>
                       <td>
-                        <span className="badge">{row.status}</span>
+                        <StatusBadge status={row.status} />
                       </td>
                     </tr>
                   ))}
                   {items.length === 0 && (
                     <tr>
                       <td colSpan={3} style={{ color: 'var(--muted)' }}>
-                        Tidak ada data
+                        Tidak ada data — coba ubah filter atau tambah KK.
                       </td>
                     </tr>
                   )}
@@ -476,7 +485,7 @@ export default function OpsDashboard() {
                         {detailKk.noKk} · NIK {maskNik(detailKk.nikKk)}
                       </p>
                     </div>
-                    <span className="badge">RT {detailKk.rt}</span>
+                    <span className="badge badge-sky">RT {detailKk.rt}</span>
                   </div>
                   <p className="text-sm" style={{ color: 'var(--muted)' }}>
                     {detailKk.alamat}
@@ -504,7 +513,7 @@ export default function OpsDashboard() {
                           <td>{w.jk}</td>
                           <td>{w.hubungan}</td>
                           <td>
-                            <span className="badge">{w.status}</span>
+                            <StatusBadge status={w.status} />
                           </td>
                           <td>
                             <div className="flex gap-1">
@@ -655,9 +664,10 @@ export default function OpsDashboard() {
       {tab === 'pengajuan' && (
         <div className="space-y-3">
           {pengajuan.length === 0 && (
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Belum ada pengajuan.
-            </p>
+            <div className="empty-state card">
+              <strong>Belum ada pengajuan</strong>
+              <p className="text-sm">Form publik /ajukan akan muncul di sini.</p>
+            </div>
           )}
           {pengajuan.map((p) => (
             <article key={p.id} className="card p-4 space-y-2">
@@ -665,7 +675,7 @@ export default function OpsDashboard() {
                 <p className="font-mono text-sm" style={{ color: 'var(--accent)' }}>
                   {p.id}
                 </p>
-                <span className="badge">{p.status}</span>
+                <StatusBadge status={p.status} />
               </div>
               <p className="font-semibold">{p.namaPelapor}</p>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>
@@ -697,6 +707,93 @@ export default function OpsDashboard() {
               )}
             </article>
           ))}
+        </div>
+      )}
+
+      {tab === 'demografi' && stats && (
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="card p-5 space-y-4">
+            <div>
+              <h2 className="font-bold">Sebaran per RT</h2>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                KK & jiwa aktif
+              </p>
+            </div>
+            {(stats.perRt || []).length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--muted)' }}>
+                Belum ada data RT.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {stats.perRt.map((r) => (
+                  <div key={r.rt} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-semibold">RT {r.rt}</span>
+                      <span style={{ color: 'var(--muted)' }}>
+                        {r.kk} KK · {r.jiwa} jiwa
+                      </span>
+                    </div>
+                    <div className="bar-track">
+                      <div
+                        className="bar-fill"
+                        style={{ width: `${Math.max(6, Math.round((r.jiwa / maxRt) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card p-5 space-y-4">
+            <div>
+              <h2 className="font-bold">Kelompok usia</h2>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                Dari tanggal lahir anggota aktif (jika terisi)
+              </p>
+            </div>
+            <div className="space-y-3">
+              {(stats.ageBuckets || []).map((b) => (
+                <div key={b.label} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-semibold">{b.label} th</span>
+                    <span style={{ color: 'var(--muted)' }}>{b.count} jiwa</span>
+                  </div>
+                  <div className="bar-track">
+                    <div
+                      className="bar-fill"
+                      style={{ width: `${Math.max(b.count ? 6 : 0, Math.round((b.count / maxAge) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card p-5 space-y-3">
+            <h2 className="font-bold">Status KK</h2>
+            <div className="flex flex-wrap gap-2">
+              {(stats.kkByStatus || []).map((s) => (
+                <span key={s.status} className="chip" data-active="true">
+                  <StatusBadge status={s.status} /> {s.count}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="card p-5 space-y-3">
+            <h2 className="font-bold">Status jiwa</h2>
+            <div className="flex flex-wrap gap-2">
+              {(stats.wargaByStatus || []).map((s) => (
+                <span key={s.status} className="chip" data-active="true">
+                  <StatusBadge status={s.status} /> {s.count}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: 'var(--muted2)' }}>
+              Laki-laki {stats.laki} · Perempuan {stats.perempuan} · Mode {stats.mode}
+            </p>
+          </div>
         </div>
       )}
 
@@ -786,6 +883,7 @@ export default function OpsDashboard() {
           </button>
         </form>
       )}
+      </div>
     </div>
   )
 }

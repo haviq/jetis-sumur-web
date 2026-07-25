@@ -69,4 +69,8 @@ export interface Stats {
   perRt: { rt: string; kk: number; jiwa: number }[]
   pendingPengajuan: number
   mode: 'mock' | 'sheets'
+  /** Demografi usia kasar dari tglLahir (aktif saja) */
+  ageBuckets: { label: string; count: number }[]
+  kkByStatus: { status: KKStatus; count: number }[]
+  wargaByStatus: { status: WargaStatus; count: number }[]
 }

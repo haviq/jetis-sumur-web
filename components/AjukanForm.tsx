@@ -42,25 +42,29 @@ export default function AjukanForm() {
 
   if (doneId) {
     return (
-      <div className="card p-6 space-y-3 text-center">
-        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
-          Terkirim
-        </p>
-        <p className="font-mono text-xl font-bold" style={{ color: 'var(--accent)' }}>
+      <div className="card p-6 md:p-8 space-y-4 text-center glow-ring">
+        <p className="eyebrow justify-center">Terkirim</p>
+        <p className="font-mono text-2xl font-extrabold" style={{ color: 'var(--accent)' }}>
           {doneId}
         </p>
-        <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          Simpan kode ini. Petugas akan meninjau pengajuan Anda.
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
+          Simpan kode ini. Petugas akan meninjau pengajuan Anda. Perubahan tidak langsung masuk data
+          resmi.
         </p>
-        <Link href="/" className="btn btn-ghost">
-          Kembali beranda
-        </Link>
+        <div className="flex flex-wrap justify-center gap-2 pt-1">
+          <button type="button" className="btn btn-ghost" onClick={() => setDoneId(null)}>
+            Ajukan lagi
+          </button>
+          <Link href="/" className="btn btn-primary">
+            Kembali beranda
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
-    <form onSubmit={onSubmit} className="card p-6 space-y-4">
+    <form onSubmit={onSubmit} className="card p-6 md:p-7 space-y-4">
       <div>
         <label className="label" htmlFor="nama">
           Nama pelapor *
@@ -72,6 +76,7 @@ export default function AjukanForm() {
           minLength={3}
           value={namaPelapor}
           onChange={(e) => setNamaPelapor(e.target.value)}
+          placeholder="Sesuai KTP"
         />
       </div>
       <div>
@@ -84,18 +89,20 @@ export default function AjukanForm() {
           value={telepon}
           onChange={(e) => setTelepon(e.target.value)}
           placeholder="08xxxxxxxxxx"
+          inputMode="tel"
         />
       </div>
       <div>
         <label className="label" htmlFor="kk">
-          No. KK (jika ada)
+          No. KK (opsional)
         </label>
         <input
           id="kk"
-          className="input"
+          className="input font-mono"
           value={noKk}
           onChange={(e) => setNoKk(e.target.value.replace(/\D/g, '').slice(0, 16))}
           placeholder="16 digit"
+          inputMode="numeric"
         />
       </div>
       <div>

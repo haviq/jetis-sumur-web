@@ -271,10 +271,23 @@ export async function reviewPengajuan(
   return row
 }
 
+function ageFromIso(tgl?: string): number | null {
+  if (!tgl || !/^\d{4}-\d{2}-\d{2}/.test(tgl)) return null
+  const d = new Date(tgl)
+  if (Number.isNaN(d.getTime())) return null
+  const now = new Date()
+  let age = now.getFullYear() - d.getFullYear()
+  const m = now.getMonth() - d.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1
+  return age >= 0 && age < 130 ? age : null
+}
+
 export async function getStats(): Promise<Stats> {
   await ensureHydrated()
-  const kk = Array.from(store().kk.values()).filter((k) => k.status === 'aktif')
-  const warga = Array.from(store().warga.values()).filter((w) => w.status === 'aktif')
+  const allKk = Array.from(store().kk.values())
+  const allWarga = Array.from(store().warga.values())
+  const kk = allKk.filter((k) => k.status === 'aktif')
+  const warga = allWarga.filter((w) => w.status === 'aktif')
   const rts = Array.from(new Set([...kk.map((k) => k.rt)])).sort()
   const perRt = rts.map((rt) => {
     const kkRt = kk.filter((k) => k.rt === rt)
@@ -286,6 +299,24 @@ export async function getStats(): Promise<Stats> {
     }
   })
   const pending = Array.from(store().pengajuan.values()).filter((p) => p.status === 'pending').length
+
+  const buckets = [
+    { label: '0–5', min: 0, max: 5 },
+    { label: '6–17', min: 6, max: 17 },
+    { label: '18–59', min: 18, max: 59 },
+    { label: '60+', min: 60, max: 200 },
+  ]
+  const ageBuckets = buckets.map((b) => ({
+    label: b.label,
+    count: warga.filter((w) => {
+      const a = ageFromIso(w.tglLahir)
+      return a != null && a >= b.min && a <= b.max
+    }).length,
+  }))
+
+  const kkStatuses: KKStatus[] = ['aktif', 'pindah', 'nonaktif']
+  const wargaStatuses: WargaStatus[] = ['aktif', 'pindah', 'meninggal']
+
   return {
     totalKk: kk.length,
     totalJiwa: warga.length,
@@ -294,6 +325,15 @@ export async function getStats(): Promise<Stats> {
     perRt,
     pendingPengajuan: pending,
     mode: dbMode(),
+    ageBuckets,
+    kkByStatus: kkStatuses.map((status) => ({
+      status,
+      count: allKk.filter((k) => k.status === status).length,
+    })),
+    wargaByStatus: wargaStatuses.map((status) => ({
+      status,
+      count: allWarga.filter((w) => w.status === status).length,
+    })),
   }
 }
 
