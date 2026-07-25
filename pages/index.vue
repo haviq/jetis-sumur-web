@@ -5,16 +5,20 @@
       <div class="absolute inset-0 hero-grid opacity-40 pointer-events-none" />
       <div class="container-page relative py-12 sm:py-16">
         <div class="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] items-start">
-          <div>
-            <p class="badge mb-4">Padukuhan Jetis Sumur · DI Yogyakarta</p>
+          <div class="reveal reveal-d1">
+            <p class="badge mb-4 tracking-[0.12em]">{{ heroBadge }}</p>
             <h1 class="font-display text-[2rem] sm:text-4xl lg:text-[2.6rem] font-bold leading-[1.15]">
-              Buku data warga,<br class="hidden sm:block" /> sekarang di web.
+              <span class="hero-type">{{ heroTyped }}</span><span
+                v-if="!heroDone"
+                class="hero-caret"
+                aria-hidden="true"
+              />
             </h1>
-            <p class="mt-4 muted max-w-xl text-[15px] leading-relaxed">
+            <p class="mt-4 muted max-w-xl text-[15px] leading-relaxed reveal reveal-d2">
               Statistik padukuhan yang bisa dilihat warga, dan dashboard pengelola untuk KK, jiwa, serta mutasi —
               datanya tersimpan di spreadsheet, bukan di kertas.
             </p>
-            <div class="mt-7 flex flex-wrap gap-3">
+            <div class="mt-7 flex flex-wrap gap-3 reveal reveal-d3">
               <NuxtLink to="/statistik" class="btn btn-primary">Lihat statistik</NuxtLink>
               <NuxtLink to="/profil" class="btn btn-ghost">Profil padukuhan</NuxtLink>
             </div>
@@ -23,7 +27,7 @@
             </p>
           </div>
 
-          <div class="card p-5 sm:p-6">
+          <div class="card p-5 sm:p-6 reveal reveal-d2">
             <div class="flex items-center justify-between mb-4">
               <div class="text-sm font-semibold">Ringkasan penduduk</div>
               <span class="badge">{{ stats?.mode || '…' }}</span>
@@ -61,7 +65,12 @@
         <NuxtLink to="/statistik" class="text-sm" style="color: var(--accent)">Detail →</NuxtLink>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div v-for="b in ageBands" :key="b.label" class="card card-hover p-4">
+        <div
+          v-for="(b, i) in ageBands"
+          :key="b.label"
+          class="card card-hover p-4 reveal"
+          :class="`reveal-d${Math.min(i + 1, 5)}`"
+        >
           <div class="text-xs muted">{{ b.label }}</div>
           <div class="stat-num text-2xl mt-1.5">{{ formatNum(b.value) }}</div>
         </div>
@@ -71,7 +80,7 @@
     <!-- RT bars -->
     <section class="container-page pb-12">
       <h2 class="section-title mb-4">Penduduk per RT</h2>
-      <div class="card p-5">
+      <div class="card p-5 reveal reveal-d2">
         <div class="space-y-3">
           <div v-for="r in stats?.perRt || []" :key="r.rt" class="grid grid-cols-[4rem_1fr_3rem] items-center gap-3 text-sm">
             <span class="muted font-medium">RT {{ r.rt }}</span>
@@ -87,7 +96,12 @@
     <section class="container-page pb-12">
       <h2 class="section-title mb-4">Yang tersedia di web ini</h2>
       <div class="grid gap-3 sm:grid-cols-3">
-        <div v-for="f in features" :key="f.t" class="card card-hover p-5">
+        <div
+          v-for="(f, i) in features"
+          :key="f.t"
+          class="card card-hover p-5 reveal"
+          :class="`reveal-d${i + 1}`"
+        >
           <div class="text-lg mb-2" aria-hidden="true">{{ f.i }}</div>
           <div class="font-semibold">{{ f.t }}</div>
           <p class="text-sm muted mt-1.5 leading-relaxed">{{ f.d }}</p>
@@ -102,7 +116,12 @@
         <NuxtLink to="/berita" class="text-sm" style="color: var(--accent)">Semua →</NuxtLink>
       </div>
       <div class="grid gap-3 sm:grid-cols-2">
-        <article v-for="b in berita.slice(0, 2)" :key="b.id" class="card card-hover p-5">
+        <article
+          v-for="(b, i) in berita.slice(0, 2)"
+          :key="b.id"
+          class="card card-hover p-5 reveal"
+          :class="`reveal-d${i + 1}`"
+        >
           <div class="text-xs muted">{{ b.tanggal }}</div>
           <h3 class="font-semibold mt-1.5 text-[1.05rem]">{{ b.judul }}</h3>
           <p class="text-sm muted mt-2 leading-relaxed">{{ b.ringkas }}</p>
@@ -142,4 +161,21 @@ const features = [
   { i: '👨‍👩‍👧‍👦', t: 'Pendataan KK & jiwa', d: 'Pengelola input lewat dashboard terproteksi, bukan menu publik.' },
   { i: '🔁', t: 'Mutasi warga', d: 'Catat masuk, keluar, lahir, meninggal, dan pindah.' },
 ]
+
+/** Hero typewriter after preloader (session-aware delay) */
+const HERO_FULL = 'Buku data warga, sekarang di web.'
+const heroTyped = ref('')
+const heroDone = ref(false)
+const heroBadge = 'Padukuhan Jetis Sumur · DI Yogyakarta'
+
+onMounted(async () => {
+  // Wait a beat so preloader can finish first paint on cold load
+  const hadPreloader = sessionStorage.getItem('jetis-preloader') === '1'
+  await new Promise((r) => setTimeout(r, hadPreloader ? 120 : 1600))
+  for (let i = 1; i <= HERO_FULL.length; i++) {
+    heroTyped.value = HERO_FULL.slice(0, i)
+    await new Promise((r) => setTimeout(r, HERO_FULL[i - 1] === ' ' ? 40 : 28))
+  }
+  heroDone.value = true
+})
 </script>
