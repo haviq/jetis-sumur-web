@@ -1,96 +1,111 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="container-page py-10 sm:py-14">
-      <div class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] items-start">
-        <div>
-          <p class="badge mb-3">Padukuhan Jetis Sumur</p>
-          <h1 class="font-display text-3xl sm:text-4xl font-bold leading-tight">
-            Buku data warga, diganti ke web.
-          </h1>
-          <p class="mt-3 muted max-w-xl">
-            Sistem informasi pendataan penduduk padukuhan: statistik publik real-time, dashboard pengelola berjenjang, dan data tersimpan di Google Spreadsheet.
-          </p>
-          <div class="mt-6 flex flex-wrap gap-3">
-            <NuxtLink to="/statistik" class="btn btn-primary">Lihat statistik</NuxtLink>
-            <NuxtLink to="/profil" class="btn btn-ghost">Profil padukuhan</NuxtLink>
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 hero-grid opacity-40 pointer-events-none" />
+      <div class="container-page relative py-12 sm:py-16">
+        <div class="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] items-start">
+          <div>
+            <p class="badge mb-4">Padukuhan Jetis Sumur · DI Yogyakarta</p>
+            <h1 class="font-display text-[2rem] sm:text-4xl lg:text-[2.6rem] font-bold leading-[1.15]">
+              Buku data warga,<br class="hidden sm:block" /> sekarang di web.
+            </h1>
+            <p class="mt-4 muted max-w-xl text-[15px] leading-relaxed">
+              Statistik padukuhan yang bisa dilihat warga, dan dashboard pengelola untuk KK, jiwa, serta mutasi —
+              datanya tersimpan di spreadsheet, bukan di kertas.
+            </p>
+            <div class="mt-7 flex flex-wrap gap-3">
+              <NuxtLink to="/statistik" class="btn btn-primary">Lihat statistik</NuxtLink>
+              <NuxtLink to="/profil" class="btn btn-ghost">Profil padukuhan</NuxtLink>
+            </div>
+            <p class="mt-5 text-xs muted">
+              NIK, nama, dan nomor HP tidak dipublikasikan.
+            </p>
           </div>
-        </div>
 
-        <div class="card p-5 grid grid-cols-2 gap-4">
-          <div>
-            <div class="text-xs muted uppercase tracking-wide">Penduduk</div>
-            <div class="stat-num">{{ formatNum(stats?.totalPenduduk) }}</div>
-          </div>
-          <div>
-            <div class="text-xs muted uppercase tracking-wide">Kartu Keluarga</div>
-            <div class="stat-num">{{ formatNum(stats?.totalKk) }}</div>
-          </div>
-          <div>
-            <div class="text-xs muted uppercase tracking-wide">Laki-laki</div>
-            <div class="stat-num text-xl">{{ formatNum(stats?.laki) }}</div>
-          </div>
-          <div>
-            <div class="text-xs muted uppercase tracking-wide">Perempuan</div>
-            <div class="stat-num text-xl">{{ formatNum(stats?.perempuan) }}</div>
-          </div>
-          <div class="col-span-2 text-xs muted border-t pt-3" style="border-color: var(--border)">
-            Mode data: <strong>{{ stats?.mode || '…' }}</strong> · data pribadi disembunyikan
+          <div class="card p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="text-sm font-semibold">Ringkasan penduduk</div>
+              <span class="badge">{{ stats?.mode || '…' }}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <div class="text-[11px] uppercase tracking-wide muted">Penduduk</div>
+                <div class="stat-num mt-1">{{ formatNum(stats?.totalPenduduk) }}</div>
+              </div>
+              <div>
+                <div class="text-[11px] uppercase tracking-wide muted">Kartu Keluarga</div>
+                <div class="stat-num mt-1">{{ formatNum(stats?.totalKk) }}</div>
+              </div>
+              <div>
+                <div class="text-[11px] uppercase tracking-wide muted">Laki-laki</div>
+                <div class="stat-num text-2xl mt-1">{{ formatNum(stats?.laki) }}</div>
+              </div>
+              <div>
+                <div class="text-[11px] uppercase tracking-wide muted">Perempuan</div>
+                <div class="stat-num text-2xl mt-1">{{ formatNum(stats?.perempuan) }}</div>
+              </div>
+            </div>
+            <div class="mt-5 pt-4 border-t text-xs muted" style="border-color: var(--border)">
+              Diperbarui dari data pengelola padukuhan
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Umur bands -->
-    <section class="container-page pb-10">
-      <h2 class="font-display text-xl font-bold mb-4">Kelompok umur</h2>
+    <!-- Age -->
+    <section class="container-page pb-12">
+      <div class="flex items-end justify-between gap-3 mb-4">
+        <h2 class="section-title">Kelompok umur</h2>
+        <NuxtLink to="/statistik" class="text-sm" style="color: var(--accent)">Detail →</NuxtLink>
+      </div>
       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div v-for="b in ageBands" :key="b.label" class="card p-4">
+        <div v-for="b in ageBands" :key="b.label" class="card card-hover p-4">
           <div class="text-xs muted">{{ b.label }}</div>
-          <div class="stat-num text-2xl mt-1">{{ formatNum(b.value) }}</div>
+          <div class="stat-num text-2xl mt-1.5">{{ formatNum(b.value) }}</div>
         </div>
       </div>
     </section>
 
-    <!-- RT -->
-    <section class="container-page pb-10">
-      <h2 class="font-display text-xl font-bold mb-4">Penduduk per RT</h2>
-      <div class="card overflow-hidden">
-        <div class="table-wrap">
-          <table class="data">
-            <thead>
-              <tr>
-                <th>RT</th>
-                <th>KK</th>
-                <th>Jiwa</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="r in stats?.perRt || []" :key="r.rt">
-                <td>RT {{ r.rt }}</td>
-                <td>{{ r.kk }}</td>
-                <td>{{ r.jiwa }}</td>
-              </tr>
-              <tr v-if="!(stats?.perRt || []).length">
-                <td colspan="3" class="muted">Belum ada data</td>
-              </tr>
-            </tbody>
-          </table>
+    <!-- RT bars -->
+    <section class="container-page pb-12">
+      <h2 class="section-title mb-4">Penduduk per RT</h2>
+      <div class="card p-5">
+        <div class="space-y-3">
+          <div v-for="r in stats?.perRt || []" :key="r.rt" class="grid grid-cols-[4rem_1fr_3rem] items-center gap-3 text-sm">
+            <span class="muted font-medium">RT {{ r.rt }}</span>
+            <div class="bar"><i :style="{ width: barWidth(r.jiwa) + '%' }" /></div>
+            <span class="text-right font-semibold">{{ r.jiwa }}</span>
+          </div>
+          <p v-if="!(stats?.perRt || []).length" class="muted text-sm">Belum ada data.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layanan -->
+    <section class="container-page pb-12">
+      <h2 class="section-title mb-4">Yang tersedia di web ini</h2>
+      <div class="grid gap-3 sm:grid-cols-3">
+        <div v-for="f in features" :key="f.t" class="card card-hover p-5">
+          <div class="text-lg mb-2" aria-hidden="true">{{ f.i }}</div>
+          <div class="font-semibold">{{ f.t }}</div>
+          <p class="text-sm muted mt-1.5 leading-relaxed">{{ f.d }}</p>
         </div>
       </div>
     </section>
 
     <!-- Berita -->
-    <section class="container-page pb-14">
+    <section class="container-page pb-16">
       <div class="flex items-end justify-between mb-4">
-        <h2 class="font-display text-xl font-bold">Berita</h2>
+        <h2 class="section-title">Berita padukuhan</h2>
         <NuxtLink to="/berita" class="text-sm" style="color: var(--accent)">Semua →</NuxtLink>
       </div>
       <div class="grid gap-3 sm:grid-cols-2">
-        <article v-for="b in berita.slice(0, 2)" :key="b.id" class="card p-5">
+        <article v-for="b in berita.slice(0, 2)" :key="b.id" class="card card-hover p-5">
           <div class="text-xs muted">{{ b.tanggal }}</div>
-          <h3 class="font-semibold mt-1">{{ b.judul }}</h3>
-          <p class="text-sm muted mt-2">{{ b.ringkas }}</p>
+          <h3 class="font-semibold mt-1.5 text-[1.05rem]">{{ b.judul }}</h3>
+          <p class="text-sm muted mt-2 leading-relaxed">{{ b.ringkas }}</p>
         </article>
         <div v-if="!berita.length" class="card p-5 muted text-sm">Belum ada berita.</div>
       </div>
@@ -99,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Beranda' })
+useHead({ title: 'Beranda · Jetis Sumur' })
 
 const { data } = await useFetch<{ ok: boolean; stats: any }>('/api/stats')
 const stats = computed(() => data.value?.stats)
@@ -114,4 +129,17 @@ const ageBands = computed(() => [
   { label: 'Dewasa (18–59)', value: stats.value?.dewasa },
   { label: 'Lansia (60+)', value: stats.value?.lansia },
 ])
+
+const maxJiwa = computed(() =>
+  Math.max(1, ...((stats.value?.perRt || []).map((r: any) => Number(r.jiwa) || 0))),
+)
+function barWidth(n: number) {
+  return Math.round((Number(n || 0) / maxJiwa.value) * 100)
+}
+
+const features = [
+  { i: '📊', t: 'Statistik publik', d: 'Jumlah jiwa, KK, demografi per RT — tanpa data pribadi.' },
+  { i: '👨‍👩‍👧‍👦', t: 'Pendataan KK & jiwa', d: 'Pengelola input lewat dashboard terproteksi, bukan menu publik.' },
+  { i: '🔁', t: 'Mutasi warga', d: 'Catat masuk, keluar, lahir, meninggal, dan pindah.' },
+]
 </script>

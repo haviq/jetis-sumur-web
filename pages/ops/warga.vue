@@ -5,10 +5,20 @@
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 class="font-display text-2xl font-bold">Data Warga</h1>
-          <p class="text-sm muted">CRUD data jiwa</p>
+          <p class="text-sm muted">CRUD data jiwa + import CSV</p>
         </div>
-        <button class="btn btn-primary text-sm" type="button" @click="openForm()">+ Warga</button>
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-ghost text-sm cursor-pointer">
+            Import CSV
+            <input type="file" accept=".csv,text/csv" class="hidden" @change="onImport" />
+          </label>
+          <button class="btn btn-primary text-sm" type="button" @click="openForm()">+ Warga</button>
+        </div>
       </div>
+
+      <p v-if="importMsg" class="mt-3 text-sm" :style="{ color: importOk ? 'var(--ok)' : 'var(--danger)' }">
+        {{ importMsg }}
+      </p>
 
       <div class="mt-4 flex flex-wrap gap-2">
         <input v-model="q" class="input max-w-xs" placeholder="Cari NIK / nama / KK" @keyup.enter="load" />
@@ -131,6 +141,8 @@ const q = ref('')
 const status = ref('')
 const show = ref(false)
 const err = ref('')
+const importMsg = ref('')
+const importOk = ref(true)
 const hubungan = [
   'Kepala Keluarga',
   'Istri',
@@ -203,6 +215,31 @@ async function remove(w: any) {
   if (!confirm(`Hapus ${w.nama}?`)) return
   await $fetch('/api/warga', { method: 'POST', body: { action: 'delete', id: w.id } })
   await load()
+}
+
+async function onImport(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  importMsg.value = 'Mengimpor…'
+  importOk.value = true
+  try {
+    const csv = await file.text()
+    const res = await $fetch<{ ok: boolean; created: number; updated: number; errors: string[] }>(
+      '/api/import',
+      { method: 'POST', body: { type: 'warga', csv } },
+    )
+    importOk.value = (res.errors || []).length === 0
+    importMsg.value = `Import warga: +${res.created} baru, ${res.updated} diperbarui${
+      res.errors?.length ? `, ${res.errors.length} error` : ''
+    }`
+    await load()
+  } catch (e: any) {
+    importOk.value = false
+    importMsg.value = e?.data?.statusMessage || 'Import gagal'
+  } finally {
+    input.value = ''
+  }
 }
 
 onMounted(async () => {

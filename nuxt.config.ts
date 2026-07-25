@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'id' },
+      titleTemplate: '%s · Jetis Sumur',
       title: 'Data Warga Jetis Sumur',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -15,6 +16,7 @@ export default defineNuxtConfig({
           content:
             'Sistem Informasi Pendataan Warga Padukuhan Jetis Sumur — statistik publik & dashboard pengelola.',
         },
+        { name: 'theme-color', content: '#0a100e' },
       ],
       link: [
         {
@@ -23,6 +25,7 @@ export default defineNuxtConfig({
         },
       ],
     },
+    pageTransition: { name: 'page', mode: 'out-in' },
   },
   runtimeConfig: {
     authSecret: process.env.AUTH_SECRET || process.env.ADMIN_PIN || 'jetis-sumur-dev-secret',

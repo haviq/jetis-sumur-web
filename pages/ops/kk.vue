@@ -5,13 +5,27 @@
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 class="font-display text-2xl font-bold">Kartu Keluarga</h1>
-          <p class="text-sm muted">CRUD data KK</p>
+          <p class="text-sm muted">CRUD + detail anggota KK</p>
         </div>
-        <button class="btn btn-primary text-sm" type="button" @click="openForm()">+ KK baru</button>
+        <div class="flex flex-wrap gap-2">
+          <label class="btn btn-ghost text-sm cursor-pointer">
+            Import CSV
+            <input type="file" accept=".csv,text/csv" class="hidden" @change="onImport" />
+          </label>
+          <button class="btn btn-primary text-sm" type="button" @click="openForm()">+ KK baru</button>
+        </div>
       </div>
 
-      <div class="mt-4 flex gap-2">
+      <p v-if="importMsg" class="mt-3 text-sm" :style="{ color: importOk ? 'var(--ok)' : 'var(--danger)' }">
+        {{ importMsg }}
+      </p>
+
+      <div class="mt-4 flex flex-wrap gap-2">
         <input v-model="q" class="input max-w-xs" placeholder="Cari kepala / no. KK / alamat" @keyup.enter="load" />
+        <select v-model="rt" class="input max-w-[8rem]" @change="load">
+          <option value="">Semua RT</option>
+          <option v-for="r in rtList" :key="r" :value="r">RT {{ r }}</option>
+        </select>
         <button class="btn btn-ghost" type="button" @click="load">Cari</button>
       </div>
 
@@ -30,11 +44,16 @@
             <tbody>
               <tr v-for="k in items" :key="k.id">
                 <td class="font-mono text-xs">{{ k.nomorKk }}</td>
-                <td>{{ k.kepalaKeluarga }}</td>
+                <td>
+                  <button class="text-left font-medium hover:underline" type="button" style="color: var(--accent)" @click="openDetail(k)">
+                    {{ k.kepalaKeluarga }}
+                  </button>
+                </td>
                 <td>{{ k.rt }}/{{ k.rw }}</td>
                 <td class="max-w-[12rem] truncate">{{ k.alamat }}</td>
                 <td class="space-x-2 whitespace-nowrap">
-                  <button class="text-xs" style="color: var(--accent)" type="button" @click="openForm(k)">Ubah</button>
+                  <button class="text-xs" style="color: var(--accent)" type="button" @click="openDetail(k)">Detail</button>
+                  <button class="text-xs muted" type="button" @click="openForm(k)">Ubah</button>
                   <button class="text-xs" style="color: var(--danger)" type="button" @click="remove(k)">Hapus</button>
                 </td>
               </tr>
@@ -44,8 +63,48 @@
         </div>
       </div>
 
+      <!-- Detail panel -->
+      <div v-if="detail" class="modal-backdrop" @click.self="detail = null">
+        <div class="card w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-xs muted font-mono">{{ detail.kk.nomorKk }}</div>
+              <h2 class="font-display text-xl font-bold mt-1">{{ detail.kk.kepalaKeluarga }}</h2>
+              <p class="text-sm muted mt-1">RT {{ detail.kk.rt }}/RW {{ detail.kk.rw }} · {{ detail.kk.alamat }}</p>
+            </div>
+            <button class="btn btn-ghost text-sm" type="button" @click="detail = null">Tutup</button>
+          </div>
+          <div class="mt-5">
+            <div class="text-sm font-semibold mb-2">Anggota ({{ detail.warga.length }})</div>
+            <div class="table-wrap card overflow-hidden">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>NIK</th>
+                    <th>Nama</th>
+                    <th>JK</th>
+                    <th>Hubungan</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="w in detail.warga" :key="w.id">
+                    <td class="font-mono text-xs">{{ w.nik }}</td>
+                    <td>{{ w.nama }}</td>
+                    <td>{{ w.jk }}</td>
+                    <td>{{ w.hubunganKk }}</td>
+                    <td><span class="badge">{{ w.status }}</span></td>
+                  </tr>
+                  <tr v-if="!detail.warga.length"><td colspan="5" class="muted">Belum ada anggota</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Modal form -->
-      <div v-if="show" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style="background: rgba(0,0,0,.55)">
+      <div v-if="show" class="modal-backdrop" @click.self="show = false">
         <form class="card w-full max-w-lg p-5 space-y-3" @submit.prevent="save">
           <h2 class="font-semibold">{{ form.id ? 'Ubah KK' : 'KK baru' }}</h2>
           <div>
@@ -72,7 +131,7 @@
           </div>
           <div>
             <label class="label">Status rumah</label>
-            <input v-model="form.statusRumah" class="input" />
+            <input v-model="form.statusRumah" class="input" placeholder="Milik sendiri / Kontrak / …" />
           </div>
           <p v-if="err" class="text-sm" style="color: var(--danger)">{{ err }}</p>
           <div class="flex justify-end gap-2 pt-2">
@@ -89,10 +148,16 @@
 definePageMeta({ layout: 'ops' })
 useHead({ title: 'Ops · KK' })
 const auth = useAuthStore()
+const site = useSite()
 const items = ref<any[]>([])
 const q = ref('')
+const rt = ref('')
 const show = ref(false)
 const err = ref('')
+const importMsg = ref('')
+const importOk = ref(true)
+const detail = ref<{ kk: any; warga: any[] } | null>(null)
+const rtList = site.rtList
 const form = reactive({
   id: '',
   nomorKk: '',
@@ -106,9 +171,16 @@ const form = reactive({
 async function load() {
   if (!auth.user) return
   const res = await $fetch<{ ok: boolean; items: any[] }>('/api/keluarga', {
-    query: { q: q.value || undefined },
+    query: { q: q.value || undefined, rt: rt.value || undefined },
   })
   items.value = res.items || []
+}
+
+async function openDetail(k: any) {
+  const res = await $fetch<{ ok: boolean; kk: any; warga: any[] }>('/api/keluarga', {
+    query: { id: k.id },
+  })
+  detail.value = { kk: res.kk, warga: res.warga || [] }
 }
 
 function openForm(k?: any) {
@@ -149,6 +221,29 @@ async function remove(k: any) {
   if (!confirm(`Hapus KK ${k.nomorKk}? Anggota juga terhapus.`)) return
   await $fetch('/api/keluarga', { method: 'POST', body: { action: 'delete', id: k.id } })
   await load()
+}
+
+async function onImport(ev: Event) {
+  const input = ev.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  importMsg.value = 'Mengimpor…'
+  importOk.value = true
+  try {
+    const csv = await file.text()
+    const res = await $fetch<{ ok: boolean; created: number; updated: number; errors: string[] }>('/api/import', {
+      method: 'POST',
+      body: { type: 'kk', csv },
+    })
+    importOk.value = (res.errors || []).length === 0
+    importMsg.value = `Import KK: +${res.created} baru, ${res.updated} diperbarui${res.errors?.length ? `, ${res.errors.length} error` : ''}`
+    await load()
+  } catch (e: any) {
+    importOk.value = false
+    importMsg.value = e?.data?.statusMessage || 'Import gagal'
+  } finally {
+    input.value = ''
+  }
 }
 
 onMounted(async () => {

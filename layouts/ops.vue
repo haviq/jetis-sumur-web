@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen" style="background: var(--bg)">
-    <div class="border-b" style="border-color: var(--border); background: var(--surface)">
+    <div class="border-b sticky top-0 z-30" style="border-color: var(--border); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(10px)">
       <div class="container-page flex h-14 items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <NuxtLink to="/ops" class="font-display font-bold truncate">Dashboard Pengelola</NuxtLink>
@@ -12,7 +12,7 @@
           <NuxtLink to="/" class="btn btn-ghost text-xs">Web publik</NuxtLink>
         </div>
       </div>
-      <nav v-if="auth.user" class="container-page flex gap-1 overflow-x-auto pb-2">
+      <nav v-if="auth.user" class="container-page flex gap-1 overflow-x-auto pb-2.5">
         <NuxtLink v-for="t in tabs" :key="t.to" :to="t.to" class="nav-link whitespace-nowrap">{{ t.label }}</NuxtLink>
       </nav>
     </div>
