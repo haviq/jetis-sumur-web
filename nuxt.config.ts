@@ -16,7 +16,7 @@ export default defineNuxtConfig({
           content:
             'Sistem Informasi Pendataan Warga Padukuhan Jetis Sumur — statistik publik & dashboard pengelola.',
         },
-        { name: 'theme-color', content: '#0a100e' },
+        { name: 'theme-color', content: '#070c0a' },
       ],
       link: [
         {

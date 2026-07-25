@@ -3,22 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0a100e;
-  --bg2: #0f1613;
-  --surface: #131c18;
+  --bg: #070c0a;
+  --bg2: #0c1310;
+  --surface: #121a16;
   --surface-soft: #1a2420;
   --border: #24332c;
-  --text: #e7eee9;
+  --text: #e8f0eb;
   --muted: #8fa39a;
   --muted2: #667a70;
   --accent: #3f9d6c;
   --accent-2: #2d7a52;
+  --accent-bright: #5ecf8f;
   --accent-dim: rgba(63, 157, 108, 0.14);
+  --accent-glow: rgba(63, 157, 108, 0.22);
   --danger: #c45c5c;
   --warn: #c4923a;
   --ok: #3f9d6c;
   --radius: 12px;
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 10px 28px rgba(0, 0, 0, 0.28);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 10px 28px rgba(0, 0, 0, 0.32);
   --ring: 0 0 0 3px var(--accent-dim);
 }
 
@@ -57,18 +59,100 @@ body {
   margin: 0;
   color: var(--text);
   font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
-  background:
-    radial-gradient(1200px 500px at 10% -10%, rgba(63, 157, 108, 0.08), transparent 55%),
-    radial-gradient(900px 400px at 100% 0%, rgba(63, 157, 108, 0.05), transparent 50%),
-    var(--bg);
+  background: var(--bg);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* —— Global atmosphere (haviq.dev-inspired) —— */
+.atm {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.atm-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.45;
+}
+
+.atm-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.045;
+  background-image: url("https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Dissolve_Noise_Texture.png");
+  background-size: 280px 280px;
+  mix-blend-mode: overlay;
+}
+
+.atm-glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(110px);
+  pointer-events: none;
+}
+
+.atm-glow--a {
+  top: -18%;
+  left: 50%;
+  width: 560px;
+  height: 560px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.atm-glow--b {
+  top: 12%;
+  right: -8%;
+  width: 420px;
+  height: 420px;
+  background: rgba(63, 157, 108, 0.14);
+  animation: glow-drift 14s ease-in-out infinite alternate;
+}
+
+.atm-glow--c {
+  bottom: -10%;
+  left: -6%;
+  width: 480px;
+  height: 480px;
+  background: rgba(45, 122, 82, 0.12);
+  animation: glow-drift 18s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes glow-drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(24px, -18px) scale(1.08);
+  }
+}
+
+[data-theme='light'] .atm-noise {
+  opacity: 0.03;
+  mix-blend-mode: multiply;
+}
+
+[data-theme='light'] .atm-glow--a {
+  background: rgba(30, 106, 68, 0.06);
+}
+
+[data-theme='light'] .atm-canvas {
+  opacity: 0.3;
 }
 
 body::before {
   content: '';
   display: block;
   height: 3px;
+  position: relative;
+  z-index: 50;
   background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 45%, transparent 100%);
 }
 
@@ -337,7 +421,7 @@ table.data tbody tr:hover td {
   transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* —— Preloader: dual curtain + typewriter —— */
+/* —— Preloader: cinematic dual curtain + noise + typewriter (haviq-like) —— */
 .preloader {
   position: fixed;
   inset: 0;
@@ -355,34 +439,82 @@ table.data tbody tr:hover td {
   visibility: hidden;
 }
 
+.preloader-scrim {
+  position: absolute;
+  inset: 0;
+  background: #050807;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.preloader.is-exit-up .preloader-scrim,
+.preloader.is-done .preloader-scrim {
+  opacity: 0;
+}
+
 .preloader-curtain {
   position: absolute;
   left: 0;
   right: 0;
   height: 50%;
   background:
-    radial-gradient(800px 280px at 50% 100%, rgba(63, 157, 108, 0.12), transparent 70%),
-    var(--bg);
+    radial-gradient(900px 320px at 50% 100%, rgba(63, 157, 108, 0.18), transparent 65%),
+    linear-gradient(180deg, #050807 0%, #0a1210 100%);
   transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
   will-change: transform;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.preloader-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image: url("https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Dissolve_Noise_Texture.png");
+  background-size: 220px 220px;
+  mix-blend-mode: overlay;
+  pointer-events: none;
 }
 
 .preloader-curtain--top {
   top: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   transform: translateY(0);
 }
 
 .preloader-curtain--bottom {
   bottom: 0;
-  border-top: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  border-top: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   transform: translateY(0);
   background:
-    radial-gradient(800px 280px at 50% 0%, rgba(63, 157, 108, 0.1), transparent 70%),
-    var(--bg);
+    radial-gradient(900px 320px at 50% 0%, rgba(63, 157, 108, 0.16), transparent 65%),
+    linear-gradient(0deg, #050807 0%, #0a1210 100%);
 }
 
-/* Slide curtains open: top goes up, bottom goes down (after hold) — then reverse */
+.preloader-orb {
+  position: absolute;
+  width: min(420px, 70vw);
+  height: min(420px, 70vw);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(63, 157, 108, 0.22) 0%, transparent 68%);
+  filter: blur(40px);
+  z-index: 1;
+  animation: preloader-orb 3.2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes preloader-orb {
+  from {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* Slide curtains: top→bottom meet, then reverse open */
 .preloader.is-exit-down .preloader-curtain--top {
   transform: translateY(0);
   animation: curtain-top-down 0.52s cubic-bezier(0.76, 0, 0.24, 1) forwards;
@@ -391,7 +523,6 @@ table.data tbody tr:hover td {
   animation: curtain-bottom-up 0.52s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
-/* Full wipe: both panels meet then reverse open */
 @keyframes curtain-top-down {
   0% { transform: translateY(0); }
   100% { transform: translateY(100%); }
@@ -401,7 +532,6 @@ table.data tbody tr:hover td {
   100% { transform: translateY(-100%); }
 }
 
-/* Exit-up: reverse — panels return from edges then open off-screen */
 .preloader.is-exit-up .preloader-curtain--top {
   animation: curtain-top-exit 0.55s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
@@ -429,7 +559,7 @@ table.data tbody tr:hover td {
 
 .preloader-center {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   text-align: center;
   padding: 1.5rem;
   transition:
@@ -445,39 +575,42 @@ table.data tbody tr:hover td {
 }
 
 .preloader-mark {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 1rem;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 1.1rem;
   border-radius: 14px;
   display: grid;
   place-items: center;
   font-weight: 800;
   letter-spacing: 0.02em;
-  color: var(--accent);
+  color: var(--accent-bright, var(--accent));
   background: var(--accent-dim);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--accent) 8%, transparent),
+    0 0 40px color-mix(in srgb, var(--accent) 25%, transparent);
   animation: pulse 1.15s ease-in-out infinite;
 }
 
 .preloader-type {
   font-family: 'Source Serif 4', Georgia, serif;
   font-weight: 700;
-  font-size: clamp(0.95rem, 3.6vw, 1.35rem);
-  letter-spacing: 0.14em;
+  font-size: clamp(0.95rem, 3.8vw, 1.45rem);
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--text);
+  color: #f2f7f4;
   display: inline-flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   min-height: 1.6em;
-  max-width: 92vw;
+  max-width: 94vw;
+  text-shadow: 0 0 40px rgba(63, 157, 108, 0.35);
 }
 
 .preloader-char {
   display: inline-block;
-  animation: char-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: char-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .preloader-char.space {
   width: 0.45em;
@@ -486,11 +619,13 @@ table.data tbody tr:hover td {
 @keyframes char-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
   }
 }
 
@@ -500,8 +635,8 @@ table.data tbody tr:hover td {
   height: 1.05em;
   margin-left: 3px;
   vertical-align: -0.12em;
-  background: var(--accent);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 50%, transparent);
+  background: var(--accent-bright, var(--accent));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 .preloader-caret.blink {
   animation: caret-blink 0.85s steps(1) infinite;
@@ -519,13 +654,37 @@ table.data tbody tr:hover td {
 }
 
 .preloader-sub {
-  margin-top: 0.65rem;
+  margin-top: 0.7rem;
   font-size: 0.72rem;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--muted) 85%, #fff);
   opacity: 0;
   animation: fade-up 0.45s ease 0.35s forwards;
+}
+
+.preloader-bar {
+  width: min(220px, 55vw);
+  height: 2px;
+  margin: 1.35rem auto 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  opacity: 0.9;
+}
+.preloader-bar > i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-bright, #5ecf8f));
+}
+.preloader-bar.run > i {
+  animation: preloader-progress 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes preloader-progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
 }
 
 @keyframes pulse {
@@ -619,17 +778,24 @@ table.data tbody tr:hover td {
 @media (prefers-reduced-motion: reduce) {
   .preloader-curtain,
   .preloader-center,
+  .preloader-orb,
+  .preloader-bar > i,
   .page-enter-active,
   .page-leave-active,
   .reveal,
   .card-hover,
   .bar > i,
-  .hero-caret {
+  .hero-caret,
+  .atm-glow,
+  .atm-canvas {
     animation: none !important;
     transition: none !important;
   }
   .preloader.is-done,
   .preloader {
+    display: none;
+  }
+  .atm {
     display: none;
   }
 }

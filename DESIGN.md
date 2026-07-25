@@ -1,129 +1,102 @@
-# DESIGN.md — Jetis Sumur Pendataan
-
-**Product:** Sistem Pendataan Warga  
-**Tone:** Operational SaaS for desa — calm, trustworthy, dense-data friendly  
-**Not:** Tourism landing / gold luxury (that’s Plosorejo)
-
+---
+version: alpha
+name: Jetis Sumur
+description: Cinematic dark padukuhan UI — void green base, emerald accent, film-grain atmosphere, editorial type. Inspired by portfolio motion (haviq.dev) + government trust.
+colors:
+  bg: "#070c0a"
+  bg2: "#0c1310"
+  surface: "#121a16"
+  surface-soft: "#1a2420"
+  border: "#24332c"
+  text: "#e8f0eb"
+  muted: "#8fa39a"
+  muted2: "#667a70"
+  accent: "#3f9d6c"
+  accent-2: "#2d7a52"
+  accent-bright: "#5ecf8f"
+  accent-dim: "rgba(63, 157, 108, 0.14)"
+  accent-glow: "rgba(63, 157, 108, 0.22)"
+  danger: "#c45c5c"
+  warn: "#c4923a"
+  ok: "#3f9d6c"
+  noise: "rgba(255, 255, 255, 0.035)"
+  glow: "rgba(255, 255, 255, 0.04)"
+typography:
+  display:
+    fontFamily: Source Serif 4
+    fontSize: 2.6rem
+    fontWeight: 700
+    lineHeight: 1.12
+    letterSpacing: "-0.02em"
+  h1:
+    fontFamily: Source Serif 4
+    fontSize: 2rem
+    fontWeight: 700
+    lineHeight: 1.15
+  body:
+    fontFamily: Source Sans 3
+    fontSize: 1rem
+    fontWeight: 400
+    lineHeight: 1.55
+  caption:
+    fontFamily: Source Sans 3
+    fontSize: 0.75rem
+    fontWeight: 500
+    letterSpacing: "0.12em"
+  preloader:
+    fontFamily: Source Serif 4
+    fontSize: "clamp(1rem, 4vw, 1.5rem)"
+    fontWeight: 700
+    letterSpacing: "0.18em"
+rounded:
+  sm: 8px
+  md: 12px
+  lg: 16px
+  full: 999px
+spacing:
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 40px
+components:
+  button-primary:
+    backgroundColor: "{colors.accent}"
+    textColor: "#04140c"
+    rounded: "{rounded.sm}"
+  card:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.md}"
+  preloader:
+    backgroundColor: "{colors.bg}"
+    textColor: "{colors.text}"
+    accent: "{colors.accent}"
 ---
 
-## 1. Brand
+## Overview
 
-| Token | Value |
-|-------|-------|
-| Product name | Jetis Sumur Data |
-| Padukuhan | Padukuhan Jetis Sumur |
-| Tagline | Pendataan warga yang rapi, bisa diaudit di spreadsheet |
+**Jetis Sumur** is a dark cinematic product UI for padukuhan citizen data.
+Visual language borrows portfolio polish (film grain, soft bloom, wide tracking)
+while staying trustworthy for government/village use — emerald, not neon.
 
----
+## Atmosphere (haviq.dev-inspired)
 
-## 2. Color (CSS variables)
+1. **Void base** — near-black green `#070c0a`, not pure black.
+2. **Film grain / noise** — fixed full-screen dissolve texture at ~3–4% opacity.
+3. **Soft bloom** — large blurred emerald/white orbs behind content.
+4. **Ambient particles** — sparse floating dots on canvas (preloader + site).
+5. **Dual-layer preloader** — dark scrim + content layer; type with wide tracking;
+   curtains slide top↔bottom; letter-by-letter reveal.
 
-```css
-:root, [data-theme="dark"] {
-  --bg: #0b1220;
-  --bg2: #111827;
-  --surface: #151f32;
-  --surface-soft: #1a2740;
-  --border: #243044;
-  --text: #e8eef7;
-  --muted: #94a3b8;
-  --muted2: #64748b;
-  --accent: #34d399;      /* emerald-400 */
-  --accent-2: #10b981;    /* emerald-500 */
-  --accent-dim: rgba(52, 211, 153, 0.15);
-  --danger: #f87171;
-  --warn: #fbbf24;
-  --info: #38bdf8;
-  --radius: 14px;
-  --font: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-display), var(--font), sans-serif;
-}
+## Motion
 
-[data-theme="light"] {
-  --bg: #f4f7fb;
-  --bg2: #ffffff;
-  --surface: #ffffff;
-  --surface-soft: #eef2f7;
-  --border: #dbe3ee;
-  --text: #0f172a;
-  --muted: #475569;
-  --muted2: #64748b;
-  --accent: #059669;
-  --accent-2: #047857;
-  --accent-dim: rgba(5, 150, 105, 0.12);
-}
-```
+- Page tabs: enter from top, leave downward.
+- Cards: stagger fade-up; hover lift 3px.
+- Preloader once per session; skip on `/ops`.
+- Respect `prefers-reduced-motion`.
 
----
+## Do / Don't
 
-## 3. Typography
-
-- **UI / tables:** Inter 400/500/600/700  
-- **Display (hero only):** "DM Sans" or "Plus Jakarta Sans" bold  
-- Table density: 13–14px body, 11–12px meta  
-- Never use decorative script fonts
-
----
-
-## 4. Layout
-
-### Public
-- Max width content: 1120px  
-- Hero: 2-col on desktop (copy + stats card stack)  
-- CTA primary: “Masuk operator” only if we decide — **default: no public link to /ops**
-
-### Admin `/ops`
-- Full-width app shell  
-- Top bar: product mark + stats chips + logout  
-- Main: search sticky + table  
-- Detail: drawer or `/ops/kk/[id]` page  
-- Touch targets ≥ 44px
-
----
-
-## 5. Components
-
-| Component | Notes |
-|-----------|-------|
-| `StatCard` | Label + big number + subtle accent bar |
-| `DataTable` | Horizontal scroll mobile; sticky first col optional |
-| `SearchBar` | Debounced 200ms |
-| `FilterChips` | RT + status |
-| `FormField` | Label + error + helper |
-| `Badge` | status aktif/pindah/meninggal |
-| `EmptyState` | illustration text only |
-| `LoginCard` | centered, minimal |
-
----
-
-## 6. Status colors
-
-| Status | Color |
-|--------|-------|
-| aktif | accent |
-| pindah | info |
-| meninggal / nonaktif | muted |
-| pending pengajuan | warn |
-
----
-
-## 7. Motion
-
-- Prefer 150–250ms ease  
-- No long preloader (ops tool)  
-- Route transitions optional/off for admin
-
----
-
-## 8. Assets
-
-- Favicon: monogram **JS** in rounded square emerald  
-- OG image: dark card “Pendataan Warga · Jetis Sumur”  
-- No stock tourist photos required for V1
-
----
-
-## 9. Do / Don’t
-
-**Do:** dense tables, clear hierarchy, spreadsheet honesty in copy  
-**Don’t:** gold luxury theme, public admin links, show full NIK on public pages
+- **Do** use emerald glow sparingly; keep body copy high contrast.
+- **Do** keep personal data off public pages.
+- **Don't** use pure neon green, purple SaaS gradients, or generic AI purple blobs.
+- **Don't** show demo passwords on login.
