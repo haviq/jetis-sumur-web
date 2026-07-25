@@ -1,5 +1,5 @@
 /**
- * In-memory store + Sheets hydrate/flush — PRD v2 (Nuxt)
+ * In-memory store + Sheets hydrate/flush — PRD v2+ (20 fitur)
  */
 import { sheetsConfigured } from './google-auth'
 import { loadFromSheets, saveToSheets, sheetsModeLabel } from './sheets'
@@ -16,16 +16,23 @@ import type {
   Akun,
   Berita,
   Keluarga,
+  Kk360,
   LogAktivitas,
   MasterItem,
   Mutasi,
   MutasiJenis,
+  PortalPengajuan,
+  PortalStatus,
   PublicStats,
   Role,
   SessionUser,
+  SuratArsip,
+  SuratJenis,
+  SuratStatus,
   Warga,
   WargaStatus,
 } from './types'
+import { humanizeAktivitas, maskNik } from './validate'
 
 type Store = {
   akun: Map<string, Akun>
@@ -35,16 +42,18 @@ type Store = {
   logs: LogAktivitas[]
   master: MasterItem[]
   berita: Map<string, Berita>
+  surat: Map<string, SuratArsip>
+  portal: Map<string, PortalPengajuan>
   hydrated: boolean
   hydrating?: Promise<void>
   dirty: boolean
 }
 
-const g = globalThis as unknown as { __jetisStoreV2?: Store }
+const g = globalThis as unknown as { __jetisStoreV3?: Store }
 
 function store(): Store {
-  if (!g.__jetisStoreV2) {
-    g.__jetisStoreV2 = {
+  if (!g.__jetisStoreV3) {
+    g.__jetisStoreV3 = {
       akun: new Map(),
       keluarga: new Map(),
       warga: new Map(),
@@ -52,21 +61,27 @@ function store(): Store {
       logs: [],
       master: [],
       berita: new Map(),
+      surat: new Map(),
+      portal: new Map(),
       hydrated: false,
       dirty: false,
     }
   }
-  return g.__jetisStoreV2
+  return g.__jetisStoreV3
 }
 
 function uid(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
 }
 
+function token(n = 16): string {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+}
+
 function ageFromIso(tgl?: string): number | null {
   if (!tgl || !/^\d{4}-\d{2}-\d{2}/.test(tgl)) return null
   const d = new Date(tgl)
-  if (Number.isNaN(d.getTime())) return null
+  if (isNaN(d.getTime())) return null
   const now = new Date()
   let age = now.getFullYear() - d.getFullYear()
   const m = now.getMonth() - d.getMonth()
@@ -82,6 +97,8 @@ function seedStore(s: Store) {
   s.logs = []
   s.master = defaultMaster()
   s.berita.clear()
+  s.surat.clear()
+  s.portal.clear()
   for (const a of defaultAkun()) s.akun.set(a.id, a)
   for (const k of defaultKeluarga()) s.keluarga.set(k.id, k)
   for (const w of defaultWarga()) s.warga.set(w.id, w)
@@ -106,6 +123,8 @@ export async function ensureHydrated(): Promise<void> {
         s.warga.clear()
         s.mutasi.clear()
         s.berita.clear()
+        s.surat.clear()
+        s.portal.clear()
         for (const a of b.akun) s.akun.set(a.id, a)
         for (const k of b.keluarga) s.keluarga.set(k.id, k)
         for (const w of b.warga) s.warga.set(w.id, w)
@@ -113,6 +132,8 @@ export async function ensureHydrated(): Promise<void> {
         s.logs = b.logs || []
         s.master = b.master?.length ? b.master : defaultMaster()
         for (const x of b.berita || []) s.berita.set(x.id, x)
+        for (const x of b.surat || []) s.surat.set(x.id, x)
+        for (const x of b.portal || []) s.portal.set(x.id, x)
         if (s.akun.size === 0) {
           for (const a of defaultAkun()) s.akun.set(a.id, a)
           s.dirty = true
@@ -153,6 +174,8 @@ async function flushSheets(): Promise<void> {
       logs: s.logs,
       master: s.master,
       berita: Array.from(s.berita.values()),
+      surat: Array.from(s.surat.values()),
+      portal: Array.from(s.portal.values()),
     })
     s.dirty = false
   } catch (e) {
@@ -171,11 +194,24 @@ export function addLog(user: string, aktivitas: string, ip?: string) {
     id: uid('log'),
     user,
     aktivitas,
+    human: humanizeAktivitas(aktivitas),
     waktu: new Date().toISOString(),
     ip,
   })
   if (s.logs.length > 800) s.logs = s.logs.slice(-500)
   markDirty()
+}
+
+/** Scope helper — filter by operator RT */
+export function scopeRts(actor?: SessionUser | null): string[] | null {
+  if (!actor?.rtScope?.length) return null
+  if (actor.role === 'super_admin' || actor.role === 'admin') return null
+  return actor.rtScope
+}
+
+function inRtScope(rt: string, scope: string[] | null): boolean {
+  if (!scope) return true
+  return scope.includes(rt)
 }
 
 export async function findAkunByUsername(username: string): Promise<Akun | null> {
@@ -212,6 +248,7 @@ export async function upsertAkun(input: Omit<Akun, 'id'> & { id?: string }): Pro
     passwordHash: input.passwordHash || existing?.passwordHash || '',
     role: input.role,
     status: input.status,
+    rtScope: input.rtScope !== undefined ? input.rtScope : existing?.rtScope,
     lastLogin: input.lastLogin || existing?.lastLogin,
   }
   store().akun.set(id, row)
@@ -219,8 +256,10 @@ export async function upsertAkun(input: Omit<Akun, 'id'> & { id?: string }): Pro
   return row
 }
 
-export function listKeluarga(opts?: { q?: string; rt?: string }): Keluarga[] {
+export function listKeluarga(opts?: { q?: string; rt?: string; scope?: string[] | null }): Keluarga[] {
   let rows = Array.from(store().keluarga.values())
+  const scope = opts?.scope ?? null
+  if (scope) rows = rows.filter((r) => inRtScope(r.rt, scope))
   if (opts?.rt) rows = rows.filter((r) => r.rt === opts.rt)
   if (opts?.q) {
     const q = opts.q.toLowerCase().trim()
@@ -239,6 +278,10 @@ export function getKeluargaByNomor(nomorKk: string): Keluarga | null {
     if (k.nomorKk === nomorKk) return k
   }
   return null
+}
+
+export function getKeluargaById(id: string): Keluarga | null {
+  return store().keluarga.get(id) || null
 }
 
 export async function upsertKeluarga(
@@ -286,17 +329,24 @@ export function listWarga(opts?: {
   status?: WargaStatus
   nomorKk?: string
   rt?: string
+  includeDeleted?: boolean
+  scope?: string[] | null
 }): Warga[] {
   let rows = Array.from(store().warga.values())
+  if (!opts?.includeDeleted) rows = rows.filter((r) => r.status !== 'deleted')
   if (opts?.status) rows = rows.filter((r) => r.status === opts.status)
   if (opts?.nomorKk) rows = rows.filter((r) => r.nomorKk === opts.nomorKk)
-  if (opts?.rt) {
+  if (opts?.rt || opts?.scope) {
     const nks = new Set(
       Array.from(store().keluarga.values())
-        .filter((k) => k.rt === opts.rt)
+        .filter((k) => {
+          if (opts?.rt && k.rt !== opts.rt) return false
+          if (opts?.scope && !inRtScope(k.rt, opts.scope)) return false
+          return true
+        })
         .map((k) => k.nomorKk),
     )
-    rows = rows.filter((r) => nks.has(r.nomorKk))
+    if (opts?.rt || opts?.scope) rows = rows.filter((r) => nks.has(r.nomorKk))
   }
   if (opts?.q) {
     const q = opts.q.toLowerCase().trim()
@@ -309,9 +359,13 @@ export function listWarga(opts?: {
 
 export function findWargaByNik(nik: string): Warga | null {
   for (const w of Array.from(store().warga.values())) {
-    if (w.nik === nik) return w
+    if (w.nik === nik && w.status !== 'deleted') return w
   }
   return null
+}
+
+export function getWargaById(id: string): Warga | null {
+  return store().warga.get(id) || null
 }
 
 export async function upsertWarga(
@@ -325,6 +379,7 @@ export async function upsertWarga(
   const row: Warga = {
     ...input,
     id,
+    deletedAt: input.status === 'deleted' ? input.deletedAt || t : undefined,
     createdAt: prev?.createdAt || t,
     updatedAt: t,
   }
@@ -334,18 +389,42 @@ export async function upsertWarga(
   return row
 }
 
-export async function deleteWarga(id: string, actor?: SessionUser): Promise<boolean> {
+/** Soft-delete compliance */
+export async function deleteWarga(id: string, actor?: SessionUser, hard = false): Promise<boolean> {
   await ensureHydrated()
   const w = store().warga.get(id)
   if (!w) return false
-  store().warga.delete(id)
+  if (hard) {
+    store().warga.delete(id)
+  } else {
+    w.status = 'deleted'
+    w.deletedAt = new Date().toISOString()
+    w.updatedAt = w.deletedAt
+    store().warga.set(id, w)
+  }
   if (actor) addLog(actor.username, `delete_warga ${w.nik}`)
   markDirty()
   return true
 }
 
-export function listMutasi(): Mutasi[] {
-  return Array.from(store().mutasi.values()).sort((a, b) => b.tanggal.localeCompare(a.tanggal))
+export async function restoreWarga(id: string, actor?: SessionUser): Promise<Warga | null> {
+  await ensureHydrated()
+  const w = store().warga.get(id)
+  if (!w) return null
+  w.status = 'aktif'
+  w.deletedAt = undefined
+  w.updatedAt = new Date().toISOString()
+  store().warga.set(id, w)
+  if (actor) addLog(actor.username, `restore_warga ${w.nik}`)
+  markDirty()
+  return w
+}
+
+export function listMutasi(opts?: { since?: string; nik?: string }): Mutasi[] {
+  let rows = Array.from(store().mutasi.values())
+  if (opts?.nik) rows = rows.filter((m) => m.nik === opts.nik)
+  if (opts?.since) rows = rows.filter((m) => m.tanggal >= opts.since!)
+  return rows.sort((a, b) => b.tanggal.localeCompare(a.tanggal) || b.createdAt.localeCompare(a.createdAt))
 }
 
 export async function addMutasi(
@@ -364,56 +443,318 @@ export async function addMutasi(
     createdAt: new Date().toISOString(),
   }
   store().mutasi.set(row.id, row)
-  const w = findWargaByNik(row.nik)
-  if (w) {
-    if (row.jenis === 'meninggal') w.status = 'meninggal'
-    if (row.jenis === 'keluar' || row.jenis === 'pindah_keluar') w.status = 'pindah'
-    if (row.jenis === 'masuk' || row.jenis === 'pindah_datang' || row.jenis === 'lahir')
-      w.status = 'aktif'
-    w.updatedAt = new Date().toISOString()
-    store().warga.set(w.id, w)
-  }
-  if (actor) addLog(actor.username, `mutasi ${row.jenis} ${row.nik}`)
+  if (actor) addLog(actor.username, `add_mutasi ${row.jenis} ${row.nik}`)
   markDirty()
   return row
 }
 
-export function listMaster(kategori?: MasterItem['kategori']): MasterItem[] {
-  let rows = store().master
-  if (kategori) rows = rows.filter((r) => r.kategori === kategori)
-  return rows.sort((a, b) => a.urutan - b.urutan || a.nilai.localeCompare(b.nilai))
+export function listLogs(limit = 100): LogAktivitas[] {
+  return store()
+    .logs.slice()
+    .reverse()
+    .slice(0, limit)
+    .map((l) => ({
+      ...l,
+      human: l.human || humanizeAktivitas(l.aktivitas),
+    }))
 }
 
-export async function setMaster(items: MasterItem[], actor?: SessionUser) {
+export function listMaster(): MasterItem[] {
+  return store().master.slice().sort((a, b) => a.urutan - b.urutan)
+}
+
+export async function upsertMaster(item: MasterItem): Promise<MasterItem> {
   await ensureHydrated()
-  store().master = items
-  if (actor) addLog(actor.username, 'update_master')
+  const s = store()
+  const idx = s.master.findIndex((m) => m.id === item.id)
+  if (idx >= 0) s.master[idx] = item
+  else s.master.push(item)
   markDirty()
+  return item
 }
 
-export function listBerita(all = false): Berita[] {
-  return Array.from(store().berita.values())
-    .filter((b) => all || b.published)
-    .sort((a, b) => b.tanggal.localeCompare(a.tanggal))
+export function listBerita(publishedOnly = true): Berita[] {
+  let rows = Array.from(store().berita.values())
+  if (publishedOnly) rows = rows.filter((b) => b.published)
+  return rows.sort((a, b) => b.tanggal.localeCompare(a.tanggal))
 }
 
-export async function upsertBerita(input: Berita, actor?: SessionUser) {
+/* ─── KK 360° ─── */
+export function getKk360(nomorKk: string): Kk360 | null {
+  const kk = getKeluargaByNomor(nomorKk)
+  if (!kk) return null
+  const anggota = listWarga({ nomorKk, includeDeleted: false })
+  const niks = new Set(anggota.map((a) => a.nik))
+  const mutasi = listMutasi().filter((m) => niks.has(m.nik)).slice(0, 40)
+  const surat = listSurat().filter((s) => niks.has(s.nik)).slice(0, 20)
+  return {
+    kk,
+    anggota,
+    mutasi,
+    surat,
+    ringkas: {
+      jiwa: anggota.length,
+      laki: anggota.filter((a) => a.jk === 'L').length,
+      perempuan: anggota.filter((a) => a.jk === 'P').length,
+      aktif: anggota.filter((a) => a.status === 'aktif').length,
+    },
+  }
+}
+
+/* ─── Global search ─── */
+export function globalSearch(q: string, scope?: string[] | null, limit = 20) {
+  const query = q.trim().toLowerCase()
+  if (query.length < 2) return { warga: [] as Warga[], kk: [] as Keluarga[], mutasi: [] as Mutasi[] }
+  const warga = listWarga({ q: query, scope }).slice(0, limit)
+  const kk = listKeluarga({ q: query, scope }).slice(0, limit)
+  const mutasi = listMutasi()
+    .filter(
+      (m) =>
+        m.nik.includes(query) ||
+        (m.nama || '').toLowerCase().includes(query) ||
+        String(m.jenis).includes(query),
+    )
+    .slice(0, Math.min(10, limit))
+  return { warga, kk, mutasi }
+}
+
+/* ─── Bulk actions ─── */
+export async function bulkUpdateWarga(
+  ids: string[],
+  patch: Partial<Pick<Warga, 'status' | 'nomorKk'>>,
+  actor?: SessionUser,
+): Promise<{ updated: number }> {
   await ensureHydrated()
-  store().berita.set(input.id, input)
-  if (actor) addLog(actor.username, `upsert_berita ${input.id}`)
+  let updated = 0
+  for (const id of ids) {
+    const w = store().warga.get(id)
+    if (!w) continue
+    if (patch.status) w.status = patch.status
+    if (patch.nomorKk) w.nomorKk = patch.nomorKk
+    w.updatedAt = new Date().toISOString()
+    store().warga.set(id, w)
+    updated++
+  }
+  if (actor) addLog(actor.username, `bulk_warga n=${updated}`)
   markDirty()
-  return input
+  return { updated }
 }
 
-export function listLogs(limit = 50): LogAktivitas[] {
-  return store().logs.slice(-limit).reverse()
+export async function bulkUpdateKkRt(
+  ids: string[],
+  rt: string,
+  actor?: SessionUser,
+): Promise<{ updated: number }> {
+  await ensureHydrated()
+  let updated = 0
+  for (const id of ids) {
+    const k = store().keluarga.get(id)
+    if (!k) continue
+    k.rt = rt
+    k.updatedAt = new Date().toISOString()
+    store().keluarga.set(id, k)
+    updated++
+  }
+  if (actor) addLog(actor.username, `bulk_kk_rt ${rt} n=${updated}`)
+  markDirty()
+  return { updated }
+}
+
+/* ─── Surat arsip + nomor ─── */
+export function nextSuratNomor(jenis: SuratJenis): string {
+  const y = new Date().getFullYear()
+  const code =
+    jenis === 'domisili'
+      ? 'DOM'
+      : jenis === 'pengantar'
+        ? 'PGR'
+        : jenis === 'usaha'
+          ? 'USH'
+          : jenis === 'tidak_mampu'
+            ? 'SKTM'
+            : 'UMUM'
+  const count = Array.from(store().surat.values()).filter((s) => s.nomor.includes(`/${y}`)).length + 1
+  return `${String(count).padStart(3, '0')}/${code}/JS/${y}`
+}
+
+export function listSurat(opts?: { nik?: string; status?: SuratStatus }): SuratArsip[] {
+  let rows = Array.from(store().surat.values())
+  if (opts?.nik) rows = rows.filter((s) => s.nik === opts.nik)
+  if (opts?.status) rows = rows.filter((s) => s.status === opts.status)
+  return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+export function findSuratByToken(tokenStr: string): SuratArsip | null {
+  for (const s of Array.from(store().surat.values())) {
+    if (s.verifyToken === tokenStr) return s
+  }
+  return null
+}
+
+export async function createSuratArsip(
+  input: {
+    jenis: SuratJenis
+    nik: string
+    nama: string
+    keperluan: string
+    nomor?: string
+    notes?: string
+  },
+  actor?: SessionUser,
+): Promise<SuratArsip> {
+  await ensureHydrated()
+  const nomor = input.nomor?.trim() || nextSuratNomor(input.jenis)
+  const row: SuratArsip = {
+    id: uid('srt'),
+    nomor,
+    jenis: input.jenis,
+    nik: input.nik,
+    nama: input.nama,
+    keperluan: input.keperluan,
+    status: 'terbit',
+    verifyToken: token(20),
+    createdBy: actor?.username,
+    createdAt: new Date().toISOString(),
+    notes: input.notes,
+  }
+  store().surat.set(row.id, row)
+  if (actor) addLog(actor.username, `surat_arsip ${row.nomor}`)
+  markDirty()
+  return row
+}
+
+/* ─── Portal warga ─── */
+export function listPortal(opts?: { status?: PortalStatus }): PortalPengajuan[] {
+  let rows = Array.from(store().portal.values())
+  if (opts?.status) rows = rows.filter((p) => p.status === opts.status)
+  return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+export async function createPortal(input: {
+  jenis: 'surat' | 'update_data'
+  nama: string
+  nik: string
+  noHp?: string
+  keperluan: string
+  detail?: string
+}): Promise<PortalPengajuan> {
+  await ensureHydrated()
+  const t = new Date().toISOString()
+  const row: PortalPengajuan = {
+    id: uid('por'),
+    jenis: input.jenis,
+    nama: input.nama,
+    nik: input.nik,
+    noHp: input.noHp,
+    keperluan: input.keperluan,
+    detail: input.detail,
+    status: 'menunggu',
+    createdAt: t,
+    updatedAt: t,
+  }
+  store().portal.set(row.id, row)
+  addLog('portal', `portal_ajukan ${row.jenis} ${maskNik(row.nik)}`)
+  markDirty()
+  return row
+}
+
+export async function updatePortal(
+  id: string,
+  patch: Partial<Pick<PortalPengajuan, 'status' | 'catatanAdmin'>>,
+  actor?: SessionUser,
+): Promise<PortalPengajuan | null> {
+  await ensureHydrated()
+  const row = store().portal.get(id)
+  if (!row) return null
+  if (patch.status) row.status = patch.status
+  if (patch.catatanAdmin !== undefined) row.catatanAdmin = patch.catatanAdmin
+  row.updatedAt = new Date().toISOString()
+  store().portal.set(id, row)
+  if (actor) addLog(actor.username, `portal_${row.status} ${row.id}`)
+  markDirty()
+  return row
+}
+
+/* ─── Backup / restore ─── */
+export function exportBackupBundle() {
+  const s = store()
+  return {
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    mode: dbMode(),
+    akun: Array.from(s.akun.values()).map(({ passwordHash: _, ...rest }) => rest),
+    keluarga: Array.from(s.keluarga.values()),
+    warga: Array.from(s.warga.values()),
+    mutasi: Array.from(s.mutasi.values()),
+    logs: s.logs.slice(-300),
+    master: s.master,
+    berita: Array.from(s.berita.values()),
+    surat: Array.from(s.surat.values()),
+    portal: Array.from(s.portal.values()),
+  }
+}
+
+export async function importBackupBundle(
+  data: {
+    keluarga?: Keluarga[]
+    warga?: Warga[]
+    mutasi?: Mutasi[]
+    master?: MasterItem[]
+    berita?: Berita[]
+    surat?: SuratArsip[]
+    portal?: PortalPengajuan[]
+  },
+  actor?: SessionUser,
+  mode: 'merge' | 'replace' = 'merge',
+): Promise<{ ok: true; counts: Record<string, number> }> {
+  await ensureHydrated()
+  const s = store()
+  if (mode === 'replace') {
+    if (data.keluarga) s.keluarga.clear()
+    if (data.warga) s.warga.clear()
+    if (data.mutasi) s.mutasi.clear()
+    if (data.surat) s.surat.clear()
+    if (data.portal) s.portal.clear()
+  }
+  const counts: Record<string, number> = {}
+  if (data.keluarga) {
+    for (const k of data.keluarga) s.keluarga.set(k.id, k)
+    counts.keluarga = data.keluarga.length
+  }
+  if (data.warga) {
+    for (const w of data.warga) s.warga.set(w.id, w)
+    counts.warga = data.warga.length
+  }
+  if (data.mutasi) {
+    for (const m of data.mutasi) s.mutasi.set(m.id, m)
+    counts.mutasi = data.mutasi.length
+  }
+  if (data.master?.length) {
+    s.master = data.master
+    counts.master = data.master.length
+  }
+  if (data.berita) {
+    for (const b of data.berita) s.berita.set(b.id, b)
+    counts.berita = data.berita.length
+  }
+  if (data.surat) {
+    for (const x of data.surat) s.surat.set(x.id, x)
+    counts.surat = data.surat.length
+  }
+  if (data.portal) {
+    for (const x of data.portal) s.portal.set(x.id, x)
+    counts.portal = data.portal.length
+  }
+  if (actor) addLog(actor.username, `restore_backup mode=${mode}`)
+  markDirty()
+  return { ok: true, counts }
 }
 
 function countBy(labels: string[]): { label: string; count: number }[] {
   const m = new Map<string, number>()
   for (const l of labels) {
-    const k = l || 'Tidak diisi'
-    m.set(k, (m.get(k) || 0) + 1)
+    const key = (l || 'Tidak diisi').trim() || 'Tidak diisi'
+    m.set(key, (m.get(key) || 0) + 1)
   }
   return Array.from(m.entries())
     .map(([label, count]) => ({ label, count }))
@@ -476,6 +817,12 @@ export async function getAdminStats(): Promise<AdminStats> {
   const base = await getPublicStats()
   const mut = Array.from(store().mutasi.values())
   const countJenis = (j: MutasiJenis) => mut.filter((m) => m.jenis === j).length
+  const since = new Date()
+  since.setDate(since.getDate() - 30)
+  const sinceIso = since.toISOString().slice(0, 10)
+  const recent = mut.filter((m) => m.tanggal >= sinceIso)
+  const masukSet = new Set(['masuk', 'lahir', 'pindah_datang'])
+  const keluarSet = new Set(['keluar', 'meninggal', 'pindah_keluar'])
   return {
     ...base,
     masuk: countJenis('masuk'),
@@ -484,9 +831,32 @@ export async function getAdminStats(): Promise<AdminStats> {
     meninggal: countJenis('meninggal'),
     pindahDatang: countJenis('pindah_datang'),
     pindahKeluar: countJenis('pindah_keluar'),
+    mutasiBulanIni: recent.length,
+    mutasiMasukBulan: recent.filter((m) => masukSet.has(m.jenis)).length,
+    mutasiKeluarBulan: recent.filter((m) => keluarSet.has(m.jenis)).length,
     recentLogs: listLogs(12),
     recentMutasi: listMutasi().slice(0, 12),
+    suratPending: listSurat().filter((s) => s.status === 'draft').length,
+    portalPending: listPortal({ status: 'menunggu' }).length,
   }
+}
+
+/** Map points for RT visualization */
+export function mapPoints(scope?: string[] | null) {
+  return listKeluarga({ scope })
+    .filter((k) => k.latitude && k.longitude)
+    .map((k) => ({
+      id: k.id,
+      nomorKk: k.nomorKk,
+      kepala: k.kepalaKeluarga,
+      rt: k.rt,
+      rw: k.rw,
+      alamat: k.alamat,
+      lat: Number(k.latitude),
+      lng: Number(k.longitude),
+      jiwa: listWarga({ nomorKk: k.nomorKk }).filter((w) => w.status === 'aktif').length,
+    }))
+    .filter((p) => !isNaN(p.lat) && !isNaN(p.lng))
 }
 
 export function roleCan(

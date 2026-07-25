@@ -112,7 +112,10 @@
         <div class="text-sm muted sm:text-right space-y-1">
           <div>{{ site.alamat }}</div>
           <div>{{ site.jamLayanan }}</div>
-          <div class="text-xs pt-2">Data pribadi warga tidak ditampilkan di website publik.</div>
+          <div class="text-xs pt-2">
+            Data pribadi warga tidak ditampilkan di website publik.
+            <NuxtLink to="/privasi" class="underline">Privasi</NuxtLink>
+          </div>
         </div>
       </div>
     </footer>
@@ -140,6 +143,7 @@ const links = [
   { to: '/struktur', label: 'Struktur' },
   { to: '/statistik', label: 'Statistik' },
   { to: '/berita', label: 'Berita' },
+  { to: '/layanan', label: 'Layanan' },
   { to: '/kontak', label: 'Kontak' },
 ]
 

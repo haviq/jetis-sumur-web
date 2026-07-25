@@ -53,6 +53,8 @@ const DEFAULT_TENANT: TenantConfig = {
   privacyNote:
     'Data warga hanya untuk administrasi padukuhan. Tidak dipublikasikan. Akses operator lewat login pengelola.',
   hosts: ['jetis-sumur-web.vercel.app', 'localhost', '127.0.0.1'],
+  whatsapp: '',
+  branding: { primary: '#0d3b2e', accent: '#34d399' },
 }
 
 /** Registry — extend when onboarding desa baru */

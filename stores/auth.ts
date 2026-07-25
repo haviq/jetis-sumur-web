@@ -6,6 +6,7 @@ export type SessionUser = {
   username: string
   role: 'super_admin' | 'admin' | 'padukuhan'
   tenantId?: string
+  rtScope?: string[]
 }
 
 export const useAuthStore = defineStore('auth', {

@@ -2,10 +2,17 @@
   <div>
     <div v-if="!auth.user" class="muted">Silakan login di /ops</div>
     <div v-else>
-      <h1 class="font-display text-2xl font-bold">Surat keterangan</h1>
-      <p class="text-sm muted mt-1">
-        Generate surat siap cetak (Save as PDF di browser). Data diambil dari buku warga.
-      </p>
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 class="font-display text-2xl font-bold">Surat & arsip</h1>
+          <p class="text-sm muted mt-1">
+            Template surat + arsip otomatis + QR verifikasi publik.
+          </p>
+        </div>
+        <a class="btn btn-ghost text-sm" href="/api/print?type=pejabat" target="_blank" rel="noopener">
+          Laporan pejabat
+        </a>
+      </div>
 
       <form class="card p-5 mt-6 space-y-3 max-w-xl" @submit.prevent="openSurat">
         <div>
@@ -32,15 +39,48 @@
         </div>
         <p v-if="err" class="text-sm" style="color: var(--danger)">{{ err }}</p>
         <div class="flex flex-wrap gap-2 pt-1">
-          <button class="btn btn-primary" type="submit">Buka & cetak</button>
-          <a class="btn btn-ghost" href="/api/print?type=rekap" target="_blank" rel="noopener">Rekap penduduk</a>
-          <a class="btn btn-ghost" href="/api/print?type=warga" target="_blank" rel="noopener">Daftar warga PDF</a>
+          <button class="btn btn-primary" type="submit">Buka & cetak (+ arsip QR)</button>
+          <a class="btn btn-ghost" href="/api/print?type=rekap" target="_blank" rel="noopener">Rekap</a>
+          <a class="btn btn-ghost" href="/api/print?type=warga" target="_blank" rel="noopener">Daftar warga</a>
         </div>
       </form>
 
-      <div class="card p-5 mt-4 max-w-xl text-sm muted">
-        <strong class="text-[var(--text)]">Cara PDF:</strong>
-        halaman surat terbuka → tombol <em>Cetak / Simpan PDF</em> → pilih printer “Save as PDF”.
+      <div class="card p-5 mt-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="font-semibold">Arsip surat</h2>
+          <button class="btn btn-ghost text-xs" type="button" :disabled="loading" @click="loadArsip">
+            {{ loading ? '…' : 'Muat ulang' }}
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left muted border-b" style="border-color: var(--border)">
+                <th class="py-2 pr-2">Nomor</th>
+                <th class="py-2 pr-2">Jenis</th>
+                <th class="py-2 pr-2">Nama</th>
+                <th class="py-2 pr-2">Status</th>
+                <th class="py-2">Verifikasi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in arsip" :key="s.id" class="border-b" style="border-color: var(--border)">
+                <td class="py-2 pr-2 font-mono text-xs">{{ s.nomor }}</td>
+                <td class="py-2 pr-2">{{ s.jenis }}</td>
+                <td class="py-2 pr-2">{{ s.nama }}</td>
+                <td class="py-2 pr-2"><span class="badge">{{ s.status }}</span></td>
+                <td class="py-2">
+                  <a class="text-xs underline" :href="`/verifikasi?t=${s.verifyToken}`" target="_blank" rel="noopener">
+                    buka
+                  </a>
+                </td>
+              </tr>
+              <tr v-if="!arsip.length">
+                <td colspan="5" class="py-4 muted text-center">Belum ada arsip</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -51,6 +91,8 @@ definePageMeta({ layout: 'ops' })
 useHead({ title: 'Ops · Surat' })
 const auth = useAuthStore()
 const err = ref('')
+const loading = ref(false)
+const arsip = ref<any[]>([])
 const form = reactive({
   jenis: 'domisili',
   nik: '',
@@ -72,10 +114,24 @@ function openSurat() {
   })
   if (form.nomor.trim()) q.set('nomor', form.nomor.trim())
   window.open(`/api/print?${q.toString()}`, '_blank', 'noopener')
+  setTimeout(loadArsip, 800)
+}
+
+async function loadArsip() {
+  loading.value = true
+  try {
+    const res = await $fetch<any>('/api/surat')
+    arsip.value = res.items || []
+  } catch {
+    arsip.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(async () => {
   if (!auth.loaded) await auth.fetchSession()
   if (!auth.user) return navigateTo('/ops')
+  await loadArsip()
 })
 </script>

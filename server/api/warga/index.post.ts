@@ -16,6 +16,17 @@ export default defineEventHandler(async (event) => {
   if (!isNik(nik) || nama.length < 2 || !nomorKk) {
     throw createError({ statusCode: 400, statusMessage: 'invalid_payload' })
   }
+  const v = validateNik(nik, {
+    tanggalLahir: body.tanggalLahir ? String(body.tanggalLahir) : undefined,
+    jk: String(body.jk || 'L') === 'P' ? 'P' : 'L',
+  })
+  if (!v.ok) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'invalid_nik',
+      data: { errors: v.errors, warnings: v.warnings },
+    })
+  }
   const existing = findWargaByNik(nik)
   if (existing && existing.id !== body.id) {
     throw createError({ statusCode: 409, statusMessage: 'duplicate_nik' })

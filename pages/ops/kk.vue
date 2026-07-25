@@ -75,7 +75,12 @@
             <button class="btn btn-ghost text-sm" type="button" @click="detail = null">Tutup</button>
           </div>
           <div class="mt-5">
-            <div class="text-sm font-semibold mb-2">Anggota ({{ detail.warga.length }})</div>
+            <div class="text-sm font-semibold mb-2">
+              Anggota ({{ detail.warga.length }})
+              <span v-if="detail.stats" class="muted font-normal">
+                · L {{ detail.stats.laki }} / P {{ detail.stats.perempuan }} · aktif {{ detail.stats.aktif }}
+              </span>
+            </div>
             <div class="table-wrap card overflow-hidden">
               <table class="data">
                 <thead>
@@ -99,6 +104,22 @@
                 </tbody>
               </table>
             </div>
+          </div>
+          <div v-if="detail.mutasi?.length" class="mt-5">
+            <div class="text-sm font-semibold mb-2">Mutasi terkait</div>
+            <ul class="text-sm space-y-1">
+              <li v-for="m in detail.mutasi" :key="m.id" class="muted">
+                {{ m.tanggal }} · <span class="badge">{{ m.jenis }}</span> · {{ m.nama || m.nik }}
+              </li>
+            </ul>
+          </div>
+          <div v-if="detail.surat?.length" class="mt-5">
+            <div class="text-sm font-semibold mb-2">Surat terkait</div>
+            <ul class="text-sm space-y-1">
+              <li v-for="s in detail.surat" :key="s.id">
+                <span class="font-mono text-xs">{{ s.nomor }}</span> · {{ s.jenis }} · {{ s.nama }}
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -149,6 +170,7 @@ definePageMeta({ layout: 'ops' })
 useHead({ title: 'Ops · KK' })
 const auth = useAuthStore()
 const site = useSite()
+const route = useRoute()
 const items = ref<any[]>([])
 const q = ref('')
 const rt = ref('')
@@ -156,7 +178,13 @@ const show = ref(false)
 const err = ref('')
 const importMsg = ref('')
 const importOk = ref(true)
-const detail = ref<{ kk: any; warga: any[] } | null>(null)
+const detail = ref<{
+  kk: any
+  warga: any[]
+  mutasi?: any[]
+  surat?: any[]
+  stats?: any
+} | null>(null)
 const rtList = site.rtList
 const form = reactive({
   id: '',
@@ -177,10 +205,24 @@ async function load() {
 }
 
 async function openDetail(k: any) {
-  const res = await $fetch<{ ok: boolean; kk: any; warga: any[] }>('/api/keluarga', {
-    query: { id: k.id },
-  })
-  detail.value = { kk: res.kk, warga: res.warga || [] }
+  try {
+    const res = await $fetch<{ ok: boolean; data: any }>('/api/kk360', {
+      query: { nomorKk: k.nomorKk },
+    })
+    const d = res.data
+    detail.value = {
+      kk: d.kk,
+      warga: d.anggota || [],
+      mutasi: d.mutasi || [],
+      surat: d.surat || [],
+      stats: d.ringkas || d.stats || null,
+    }
+  } catch {
+    const res = await $fetch<{ ok: boolean; kk: any; warga: any[] }>('/api/keluarga', {
+      query: { id: k.id },
+    })
+    detail.value = { kk: res.kk, warga: res.warga || [], mutasi: [], surat: [], stats: null }
+  }
 }
 
 function openForm(k?: any) {
@@ -250,5 +292,10 @@ onMounted(async () => {
   if (!auth.loaded) await auth.fetchSession()
   if (!auth.user) return navigateTo('/ops')
   await load()
+  const kkQ = String(route.query.kk || '')
+  if (kkQ) {
+    const hit = items.value.find((k) => k.nomorKk === kkQ)
+    if (hit) await openDetail(hit)
+  }
 })
 </script>

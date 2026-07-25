@@ -9,6 +9,15 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'id' },
       titleTemplate: '%s · Jetis Sumur',
       title: 'Data Warga Jetis Sumur',
+      link: [
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:wght@600;700&display=swap',
+        },
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' },
+        { rel: 'apple-touch-icon', href: '/icon.svg' },
+      ],
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
@@ -17,12 +26,9 @@ export default defineNuxtConfig({
             'Sistem Informasi Pendataan Warga Padukuhan Jetis Sumur — statistik publik & dashboard pengelola.',
         },
         { name: 'theme-color', content: '#070c0a' },
-      ],
-      link: [
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Serif+4:wght@600;700&display=swap',
-        },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
       ],
     },
     pageTransition: {

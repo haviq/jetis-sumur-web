@@ -39,6 +39,7 @@ export function mintSession(user: SessionUser, now = Date.now()): string {
     username: user.username,
     role: user.role,
     tenantId: user.tenantId || 'jetis-sumur',
+    rtScope: user.rtScope || [],
     exp,
   })
   const body = Buffer.from(payload).toString('base64url')
@@ -66,6 +67,7 @@ export function verifySession(token: string | undefined | null): SessionUser | n
       username: data.username,
       role: data.role as Role,
       tenantId: data.tenantId || 'jetis-sumur',
+      rtScope: Array.isArray(data.rtScope) ? data.rtScope : undefined,
     }
   } catch {
     return null

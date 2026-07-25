@@ -6,7 +6,12 @@
       <p class="text-sm muted mt-1">CSV untuk Excel/Sheets · PDF lewat cetak browser</p>
 
       <h2 class="font-semibold mt-6 mb-3">Cetak / PDF</h2>
-      <div class="grid gap-3 sm:grid-cols-3">
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <a class="card card-hover p-5" href="/api/print?type=pejabat" target="_blank" rel="noopener">
+          <div class="font-semibold">Laporan pejabat</div>
+          <div class="text-sm muted mt-1">Rekap formal untuk dukuh / kalurahan</div>
+          <div class="text-xs mt-3" style="color: var(--accent)">Buka cetak →</div>
+        </a>
         <a class="card card-hover p-5" href="/api/print?type=rekap" target="_blank" rel="noopener">
           <div class="font-semibold">Rekap agregat</div>
           <div class="text-sm muted mt-1">Total jiwa, KK, demografi, per RT</div>
@@ -18,9 +23,19 @@
           <div class="text-xs mt-3" style="color: var(--accent)">Buka cetak →</div>
         </a>
         <NuxtLink class="card card-hover p-5" to="/ops/surat">
-          <div class="font-semibold">Surat keterangan</div>
-          <div class="text-sm muted mt-1">Domisili, pengantar, usaha, SKTM</div>
+          <div class="font-semibold">Surat + QR</div>
+          <div class="text-sm muted mt-1">Domisili, pengantar, usaha, SKTM + arsip</div>
           <div class="text-xs mt-3" style="color: var(--accent)">Form surat →</div>
+        </NuxtLink>
+        <a class="card card-hover p-5" href="/api/backup" target="_blank" rel="noopener">
+          <div class="font-semibold">Backup JSON</div>
+          <div class="text-sm muted mt-1">Export penuh untuk arsip padukuhan</div>
+          <div class="text-xs mt-3" style="color: var(--accent)">Unduh →</div>
+        </a>
+        <NuxtLink class="card card-hover p-5" to="/ops/import">
+          <div class="font-semibold">Import wizard</div>
+          <div class="text-sm muted mt-1">Preview validasi CSV sebelum commit</div>
+          <div class="text-xs mt-3" style="color: var(--accent)">Buka wizard →</div>
         </NuxtLink>
       </div>
 

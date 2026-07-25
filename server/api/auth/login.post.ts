@@ -47,6 +47,7 @@ export default defineEventHandler(async (event) => {
     username: akun.username,
     role: akun.role,
     tenantId: tenant.id,
+    rtScope: akun.rtScope,
   }
   setHeader(event, 'Set-Cookie', cookieHeader(mintSession(user)))
   return { ok: true, user }

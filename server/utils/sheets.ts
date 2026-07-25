@@ -10,6 +10,8 @@ import type {
   LogAktivitas,
   MasterItem,
   Mutasi,
+  PortalPengajuan,
+  SuratArsip,
   Warga,
 } from './types'
 
@@ -21,9 +23,11 @@ export type SheetBundle = {
   logs: LogAktivitas[]
   master: MasterItem[]
   berita: Berita[]
+  surat?: SuratArsip[]
+  portal?: PortalPengajuan[]
 }
 
-const AKUN_H = ['id', 'nama', 'username', 'password_hash', 'role', 'status', 'last_login'] as const
+const AKUN_H = ['id', 'nama', 'username', 'password_hash', 'role', 'status', 'last_login', 'rt_scope'] as const
 const KEL_H = [
   'id',
   'nomor_kk',
@@ -56,6 +60,7 @@ const WARGA_H = [
   'disabilitas',
   'foto',
   'status',
+  'deleted_at',
   'created_at',
   'updated_at',
 ] as const
@@ -63,6 +68,32 @@ const MUT_H = ['id', 'nik', 'nama', 'jenis', 'tanggal', 'keterangan', 'created_b
 const LOG_H = ['id', 'user', 'aktivitas', 'waktu', 'ip'] as const
 const MASTER_H = ['id', 'kategori', 'nilai', 'urutan'] as const
 const BERITA_H = ['id', 'judul', 'ringkas', 'isi', 'tanggal', 'published'] as const
+const SURAT_H = [
+  'id',
+  'nomor',
+  'jenis',
+  'nik',
+  'nama',
+  'keperluan',
+  'status',
+  'verify_token',
+  'created_by',
+  'created_at',
+  'notes',
+] as const
+const PORTAL_H = [
+  'id',
+  'jenis',
+  'nama',
+  'nik',
+  'no_hp',
+  'keperluan',
+  'detail',
+  'status',
+  'catatan_admin',
+  'created_at',
+  'updated_at',
+] as const
 
 function cell(row: string[], idx: number): string {
   return String(row[idx] ?? '').trim()
@@ -113,6 +144,10 @@ async function putRange(range: string, values: string[][]): Promise<void> {
 
 function parseAkun(o: Record<string, string>): Akun | null {
   if (!o.id || !o.username) return null
+  const scope = (o.rt_scope || '')
+    .split(/[|,;]/)
+    .map((x) => x.trim())
+    .filter(Boolean)
   return {
     id: o.id,
     nama: o.nama || o.username,
@@ -120,6 +155,7 @@ function parseAkun(o: Record<string, string>): Akun | null {
     passwordHash: o.password_hash || '',
     role: (o.role as Akun['role']) || 'padukuhan',
     status: (o.status as Akun['status']) || 'aktif',
+    rtScope: scope.length ? scope : undefined,
     lastLogin: o.last_login || undefined,
   }
 }
@@ -162,6 +198,41 @@ function parseWarga(o: Record<string, string>): Warga | null {
     disabilitas: o.disabilitas || undefined,
     foto: o.foto || undefined,
     status: (o.status as Warga['status']) || 'aktif',
+    deletedAt: o.deleted_at || undefined,
+    createdAt: o.created_at || new Date().toISOString(),
+    updatedAt: o.updated_at || new Date().toISOString(),
+  }
+}
+
+function parseSurat(o: Record<string, string>): SuratArsip | null {
+  if (!o.id || !o.nomor) return null
+  return {
+    id: o.id,
+    nomor: o.nomor,
+    jenis: (o.jenis as SuratArsip['jenis']) || 'umum',
+    nik: o.nik || '',
+    nama: o.nama || '',
+    keperluan: o.keperluan || '',
+    status: (o.status as SuratArsip['status']) || 'terbit',
+    verifyToken: o.verify_token || o.id,
+    createdBy: o.created_by || undefined,
+    createdAt: o.created_at || new Date().toISOString(),
+    notes: o.notes || undefined,
+  }
+}
+
+function parsePortal(o: Record<string, string>): PortalPengajuan | null {
+  if (!o.id) return null
+  return {
+    id: o.id,
+    jenis: o.jenis === 'update_data' ? 'update_data' : 'surat',
+    nama: o.nama || '',
+    nik: o.nik || '',
+    noHp: o.no_hp || undefined,
+    keperluan: o.keperluan || '',
+    detail: o.detail || undefined,
+    status: (o.status as PortalPengajuan['status']) || 'menunggu',
+    catatanAdmin: o.catatan_admin || undefined,
     createdAt: o.created_at || new Date().toISOString(),
     updatedAt: o.updated_at || new Date().toISOString(),
   }
@@ -224,15 +295,19 @@ export async function loadFromSheets(): Promise<SheetBundle> {
     'log_aktivitas',
     'master',
     'berita',
+    'surat_arsip',
+    'portal',
   ])
-  const [akunV, kelV, wargaV, mutV, logV, masterV, beritaV] = await Promise.all([
-    getRange('akun!A:G').catch(() => [] as string[][]),
+  const [akunV, kelV, wargaV, mutV, logV, masterV, beritaV, suratV, portalV] = await Promise.all([
+    getRange('akun!A:H').catch(() => [] as string[][]),
     getRange('keluarga!A:K').catch(() => [] as string[][]),
-    getRange('warga!A:T').catch(() => [] as string[][]),
+    getRange('warga!A:U').catch(() => [] as string[][]),
     getRange('mutasi!A:H').catch(() => [] as string[][]),
     getRange('log_aktivitas!A:E').catch(() => [] as string[][]),
     getRange('master!A:D').catch(() => [] as string[][]),
     getRange('berita!A:F').catch(() => [] as string[][]),
+    getRange('surat_arsip!A:K').catch(() => [] as string[][]),
+    getRange('portal!A:K').catch(() => [] as string[][]),
   ])
 
   return {
@@ -243,6 +318,8 @@ export async function loadFromSheets(): Promise<SheetBundle> {
     logs: rowsToObjects(logV).map(parseLog).filter(Boolean) as LogAktivitas[],
     master: rowsToObjects(masterV).map(parseMaster).filter(Boolean) as MasterItem[],
     berita: rowsToObjects(beritaV).map(parseBerita).filter(Boolean) as Berita[],
+    surat: rowsToObjects(suratV).map(parseSurat).filter(Boolean) as SuratArsip[],
+    portal: rowsToObjects(portalV).map(parsePortal).filter(Boolean) as PortalPengajuan[],
   }
 }
 
@@ -256,6 +333,8 @@ export async function saveToSheets(b: SheetBundle): Promise<void> {
     'log_aktivitas',
     'master',
     'berita',
+    'surat_arsip',
+    'portal',
   ])
   const akunRows: string[][] = [
     [...AKUN_H],
@@ -267,6 +346,7 @@ export async function saveToSheets(b: SheetBundle): Promise<void> {
       a.role,
       a.status,
       a.lastLogin || '',
+      (a.rtScope || []).join('|'),
     ]),
   ]
   const kelRows: string[][] = [
@@ -306,6 +386,7 @@ export async function saveToSheets(b: SheetBundle): Promise<void> {
       w.disabilitas || '',
       w.foto || '',
       w.status,
+      w.deletedAt || '',
       w.createdAt,
       w.updatedAt,
     ]),
@@ -342,6 +423,38 @@ export async function saveToSheets(b: SheetBundle): Promise<void> {
       x.published ? 'true' : 'false',
     ]),
   ]
+  const suratRows: string[][] = [
+    [...SURAT_H],
+    ...(b.surat || []).map((x) => [
+      x.id,
+      x.nomor,
+      x.jenis,
+      x.nik,
+      x.nama,
+      x.keperluan,
+      x.status,
+      x.verifyToken,
+      x.createdBy || '',
+      x.createdAt,
+      x.notes || '',
+    ]),
+  ]
+  const portalRows: string[][] = [
+    [...PORTAL_H],
+    ...(b.portal || []).map((x) => [
+      x.id,
+      x.jenis,
+      x.nama,
+      x.nik,
+      x.noHp || '',
+      x.keperluan,
+      x.detail || '',
+      x.status,
+      x.catatanAdmin || '',
+      x.createdAt,
+      x.updatedAt,
+    ]),
+  ]
 
   await Promise.all([
     putRange('akun!A1', akunRows),
@@ -351,6 +464,8 @@ export async function saveToSheets(b: SheetBundle): Promise<void> {
     putRange('log_aktivitas!A1', logRows),
     putRange('master!A1', masterRows),
     putRange('berita!A1', beritaRows),
+    putRange('surat_arsip!A1', suratRows),
+    putRange('portal!A1', portalRows),
   ])
 }
 

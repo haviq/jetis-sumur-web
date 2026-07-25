@@ -20,7 +20,7 @@
         {{ importMsg }}
       </p>
 
-      <div class="mt-4 flex flex-wrap gap-2">
+      <div class="mt-4 flex flex-wrap gap-2 items-center">
         <input v-model="q" class="input max-w-xs" placeholder="Cari NIK / nama / KK" @keyup.enter="load" />
         <select v-model="status" class="input max-w-[10rem]" @change="load">
           <option value="">Semua status</option>
@@ -29,6 +29,22 @@
           <option value="meninggal">Meninggal</option>
         </select>
         <button class="btn btn-ghost" type="button" @click="load">Cari</button>
+        <button
+          v-if="selected.length"
+          class="btn btn-ghost text-sm"
+          type="button"
+          @click="bulkStatus('pindah')"
+        >
+          Bulk → pindah ({{ selected.length }})
+        </button>
+        <button
+          v-if="selected.length"
+          class="btn btn-ghost text-sm"
+          type="button"
+          @click="bulkStatus('aktif')"
+        >
+          Bulk → aktif
+        </button>
       </div>
 
       <div class="card mt-4 overflow-hidden">
@@ -36,6 +52,9 @@
           <table class="data">
             <thead>
               <tr>
+                <th class="w-8">
+                  <input type="checkbox" :checked="allSelected" @change="toggleAll" />
+                </th>
                 <th>NIK</th>
                 <th>Nama</th>
                 <th>JK</th>
@@ -46,6 +65,9 @@
             </thead>
             <tbody>
               <tr v-for="w in items" :key="w.id">
+                <td>
+                  <input v-model="selected" type="checkbox" :value="w.id" />
+                </td>
                 <td class="font-mono text-xs">{{ w.nik }}</td>
                 <td>{{ w.nama }}</td>
                 <td>{{ w.jk }}</td>
@@ -137,12 +159,32 @@ definePageMeta({ layout: 'ops' })
 useHead({ title: 'Ops · Warga' })
 const auth = useAuthStore()
 const items = ref<any[]>([])
+const selected = ref<string[]>([])
 const q = ref('')
 const status = ref('')
 const show = ref(false)
 const err = ref('')
 const importMsg = ref('')
 const importOk = ref(true)
+const allSelected = computed(
+  () => items.value.length > 0 && selected.value.length === items.value.length,
+)
+
+function toggleAll(e: Event) {
+  const on = (e.target as HTMLInputElement).checked
+  selected.value = on ? items.value.map((w) => w.id) : []
+}
+
+async function bulkStatus(st: string) {
+  if (!selected.value.length) return
+  if (!confirm(`Ubah ${selected.value.length} warga → ${st}?`)) return
+  await $fetch('/api/bulk', {
+    method: 'POST',
+    body: { target: 'warga', ids: selected.value, status: st },
+  })
+  selected.value = []
+  await load()
+}
 const hubungan = [
   'Kepala Keluarga',
   'Istri',
@@ -176,6 +218,7 @@ async function load() {
     query: { q: q.value || undefined, status: status.value || undefined },
   })
   items.value = res.items || []
+  selected.value = []
 }
 
 function openForm(w?: any) {

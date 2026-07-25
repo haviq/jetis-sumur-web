@@ -97,6 +97,23 @@ async function save() {
   err.value = ''
   try {
     await $fetch('/api/mutasi', { method: 'POST', body: { ...form } })
+    // Optional WA deep-link for pengelola
+    try {
+      const wa = await $fetch<any>('/api/wa', {
+        method: 'POST',
+        body: {
+          kind: 'mutasi',
+          message: `[Jetis Sumur] Mutasi ${form.jenis}: ${form.nama || form.nik} · ${form.tanggal}${
+            form.keterangan ? ` · ${form.keterangan}` : ''
+          }`,
+        },
+      })
+      if (wa?.ok && wa.url && confirm('Buka WhatsApp untuk notifikasi mutasi?')) {
+        window.open(wa.url, '_blank', 'noopener')
+      }
+    } catch {
+      /* optional */
+    }
     show.value = false
     await load()
   } catch (e: any) {

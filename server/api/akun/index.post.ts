@@ -9,6 +9,15 @@ export default defineEventHandler(async (event) => {
   const role = String(body.role || 'padukuhan') as any
   const status = String(body.status || 'aktif') as any
   const password = String(body.password || '')
+  const rtScopeRaw = body.rtScope
+  const rtScope = Array.isArray(rtScopeRaw)
+    ? rtScopeRaw.map(String).map((x) => x.trim()).filter(Boolean)
+    : typeof rtScopeRaw === 'string'
+      ? String(rtScopeRaw)
+          .split(/[|,;]/)
+          .map((x) => x.trim())
+          .filter(Boolean)
+      : undefined
   if (!nama || !username) {
     throw createError({ statusCode: 400, statusMessage: 'invalid_payload' })
   }
@@ -19,6 +28,7 @@ export default defineEventHandler(async (event) => {
     role,
     status,
     passwordHash: password ? hashPassword(password) : '',
+    rtScope,
   })
   const { passwordHash: _, ...safe } = row
   return { ok: true, item: safe }

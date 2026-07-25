@@ -5,7 +5,7 @@
       <div class="flex items-end justify-between gap-3">
         <div>
           <h1 class="font-display text-2xl font-bold">Pengguna</h1>
-          <p class="text-sm muted">Kelola akun dashboard</p>
+          <p class="text-sm muted">Kelola akun dashboard · RT scope untuk role padukuhan</p>
         </div>
         <button class="btn btn-primary text-sm" type="button" @click="open()">+ Akun</button>
       </div>
@@ -18,6 +18,7 @@
                 <th>Nama</th>
                 <th>Username</th>
                 <th>Role</th>
+                <th>RT scope</th>
                 <th>Status</th>
                 <th>Login terakhir</th>
                 <th></th>
@@ -28,6 +29,7 @@
                 <td>{{ a.nama }}</td>
                 <td>{{ a.username }}</td>
                 <td>{{ a.role }}</td>
+                <td class="text-xs font-mono">{{ (a.rtScope || []).join(', ') || '—' }}</td>
                 <td>{{ a.status }}</td>
                 <td class="text-xs muted">{{ a.lastLogin || '—' }}</td>
                 <td>
@@ -63,6 +65,11 @@
             </select>
           </div>
           <div>
+            <label class="label">RT scope (padukuhan) — pisah koma</label>
+            <input v-model="form.rtScope" class="input font-mono" placeholder="01,02" />
+            <p class="text-xs muted mt-1">Kosong = semua RT (admin/super). Padukuhan: isi RT yang diizinkan.</p>
+          </div>
+          <div>
             <label class="label">Status</label>
             <select v-model="form.status" class="input">
               <option value="aktif">aktif</option>
@@ -92,6 +99,7 @@ const form = reactive({
   password: '',
   role: 'padukuhan',
   status: 'aktif',
+  rtScope: '',
 })
 
 async function load() {
@@ -106,6 +114,7 @@ function open(a?: any) {
   form.password = ''
   form.role = a?.role || 'padukuhan'
   form.status = a?.status || 'aktif'
+  form.rtScope = Array.isArray(a?.rtScope) ? a.rtScope.join(',') : ''
   show.value = true
 }
 
@@ -119,6 +128,7 @@ async function save() {
       password: form.password || undefined,
       role: form.role,
       status: form.status,
+      rtScope: form.rtScope,
     },
   })
   show.value = false

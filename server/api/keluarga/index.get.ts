@@ -12,11 +12,18 @@ export default defineEventHandler(async (event) => {
     if (!kk) throw createError({ statusCode: 404, statusMessage: 'not_found' })
     return { ok: true, kk, warga: listWarga({ nomorKk: kk.nomorKk }) }
   }
-  return {
-    ok: true,
-    items: listKeluarga({
-      q: q.q ? String(q.q) : undefined,
-      rt: q.rt ? String(q.rt) : undefined,
-    }),
+  const scope = scopeRts(user)
+  let rt = q.rt ? String(q.rt) : undefined
+  if (scope) {
+    if (rt && !scope.includes(rt)) rt = scope[0]
+    else if (!rt) {
+      // padukuhan: multi-rt via sequential filter after
+    }
   }
+  let items = listKeluarga({
+    q: q.q ? String(q.q) : undefined,
+    rt,
+  })
+  if (scope) items = items.filter((k) => scope.includes(k.rt))
+  return { ok: true, items, rtScope: scope || null }
 })

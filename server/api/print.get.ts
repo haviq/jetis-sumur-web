@@ -8,6 +8,8 @@ export default defineEventHandler(async (event) => {
   const q = getQuery(event)
   const type = String(q.type || 'rekap')
   const host = getRequestHeader(event, 'host')
+  const proto = getRequestHeader(event, 'x-forwarded-proto') || 'https'
+  const origin = `${proto}://${host || 'localhost'}`
   const tenant = resolveTenant({
     host,
     tenantId: user.tenantId,
@@ -26,22 +28,44 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, statusMessage: 'warga_not_found' })
     }
     const kk = getKeluargaByNomor(warga.nomorKk)
-    addLog(user.username, `print_surat ${nik}`)
+    // archive + QR token
+    const arsip = await createSuratArsip(
+      {
+        jenis: (String(q.jenis || 'umum') as any) || 'umum',
+        nik,
+        nama: warga.nama,
+        keperluan: typeof q.keperluan === 'string' ? q.keperluan : 'administrasi',
+        nomor: typeof q.nomor === 'string' ? q.nomor : undefined,
+      },
+      user,
+    )
+    const verifyUrl = `${origin}/verifikasi?t=${arsip.verifyToken}`
+    addLog(user.username, `print_surat ${nik} ${arsip.nomor}`)
     return renderSuratHtml({
       tenant,
-      jenis: String(q.jenis || 'umum'),
-      nomor: typeof q.nomor === 'string' ? q.nomor : undefined,
+      jenis: arsip.jenis,
+      nomor: arsip.nomor,
       warga,
       kk,
-      keperluan: typeof q.keperluan === 'string' ? q.keperluan : 'administrasi',
+      keperluan: arsip.keperluan,
       printedBy: user.nama,
+      verifyUrl,
     })
   }
 
   if (type === 'warga') {
     const rt = typeof q.rt === 'string' ? q.rt : undefined
     const status = typeof q.status === 'string' ? (q.status as any) : undefined
-    const rowsRaw = listWarga({ rt, status })
+    const scope = scopeRts(user)
+    let rowsRaw = listWarga({ rt, status })
+    if (scope) {
+      const allowed = new Set(
+        listKeluarga()
+          .filter((k) => scope.includes(k.rt))
+          .map((k) => k.nomorKk),
+      )
+      rowsRaw = rowsRaw.filter((w) => allowed.has(w.nomorKk))
+    }
     const kkMap = new Map(listKeluarga().map((k) => [k.nomorKk, k]))
     const rows = rowsRaw.map((w) => {
       const k = kkMap.get(w.nomorKk)
@@ -60,11 +84,25 @@ export default defineEventHandler(async (event) => {
       tenant,
       rows,
       printedBy: user.nama,
-      filterNote: [rt ? `RT ${rt}` : null, status ? `status ${status}` : null].filter(Boolean).join(' · ') || 'Semua warga',
+      filterNote:
+        [rt ? `RT ${rt}` : null, status ? `status ${status}` : null].filter(Boolean).join(' · ') ||
+        'Semua warga',
     })
   }
 
-  // default rekap agregat
+  if (type === 'pejabat' || type === 'laporan') {
+    const stats = await getPublicStats()
+    addLog(user.username, 'print_laporan_pejabat')
+    return renderLaporanPejabatHtml({
+      tenant,
+      stats: {
+        ...stats,
+        periodLabel: typeof q.period === 'string' ? q.period : 'Periode berjalan',
+      },
+      printedBy: user.nama,
+    })
+  }
+
   const stats = await getPublicStats()
   addLog(user.username, 'print_rekap')
   return renderRekapHtml({

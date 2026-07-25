@@ -170,6 +170,7 @@ export function renderSuratHtml(opts: {
   kk?: Keluarga | null
   keperluan?: string
   printedBy?: string
+  verifyUrl?: string
 }): string {
   const { tenant, jenis, warga, kk, keperluan, printedBy } = opts
   const nomor =
@@ -219,6 +220,14 @@ export function renderSuratHtml(opts: {
       <div><strong>( ${esc(printedBy || '........................') } )</strong></div>
     </div>
   </div>
+  ${
+    opts.verifyUrl
+      ? `<div style="margin-top:16px;text-align:center">
+    <img src="${qrImgUrl(opts.verifyUrl, 100)}" width="100" height="100" alt="QR verifikasi" />
+    <div class="muted" style="font-size:9pt;margin-top:4px">Scan untuk verifikasi surat<br/>${esc(opts.verifyUrl)}</div>
+  </div>`
+      : ''
+  }
   `
   return shell(`${title} · ${warga.nama}`, body)
 }
@@ -257,3 +266,76 @@ export function renderWargaListHtml(opts: {
   `
   return shell(`Daftar Warga · ${tenant.shortName}`, body)
 }
+
+/** Laporan pejabat — rekap bulanan/ringkas untuk dukuh/kalurahan */
+export function renderLaporanPejabatHtml(opts: {
+  tenant: TenantConfig
+  stats: {
+    totalKk: number
+    totalJiwa: number
+    laki: number
+    perempuan: number
+    masuk: number
+    keluar: number
+    lahir: number
+    meninggal: number
+    pindahDatang: number
+    pindahKeluar: number
+    perRt: { rt: string; kk: number; jiwa: number }[]
+    periodLabel?: string
+  }
+  printedBy?: string
+}): string {
+  const { tenant, stats, printedBy } = opts
+  const rows = (stats.perRt || [])
+    .map(
+      (r) =>
+        `<tr><td>RT ${esc(r.rt)}</td><td class="num">${r.kk}</td><td class="num">${r.jiwa}</td></tr>`,
+    )
+    .join('')
+  const body = `
+  ${kopHtml(tenant)}
+  <div class="title">Laporan Pejabat · Rekap Penduduk</div>
+  <div class="nomor">${esc(stats.periodLabel || 'Periode berjalan')} · ${esc(formatIdDate())}</div>
+  <p class="para">
+    Dengan hormat, berikut rekap data kependudukan ${esc(tenant.name)} untuk keperluan pejabat/padukuhan.
+  </p>
+  <table class="data">
+    <thead><tr><th>Indikator</th><th class="num">Jumlah</th></tr></thead>
+    <tbody>
+      <tr><td>Kartu Keluarga</td><td class="num">${stats.totalKk}</td></tr>
+      <tr><td>Jiwa (aktif)</td><td class="num">${stats.totalJiwa}</td></tr>
+      <tr><td>Laki-laki</td><td class="num">${stats.laki}</td></tr>
+      <tr><td>Perempuan</td><td class="num">${stats.perempuan}</td></tr>
+      <tr><td>Mutasi masuk</td><td class="num">${stats.masuk}</td></tr>
+      <tr><td>Mutasi keluar</td><td class="num">${stats.keluar}</td></tr>
+      <tr><td>Lahir</td><td class="num">${stats.lahir}</td></tr>
+      <tr><td>Meninggal</td><td class="num">${stats.meninggal}</td></tr>
+      <tr><td>Pindah datang</td><td class="num">${stats.pindahDatang}</td></tr>
+      <tr><td>Pindah keluar</td><td class="num">${stats.pindahKeluar}</td></tr>
+    </tbody>
+  </table>
+  <div class="title" style="font-size:13pt;margin-top:18px">Per RT</div>
+  <table class="data">
+    <thead><tr><th>RT</th><th class="num">KK</th><th class="num">Jiwa</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="3">—</td></tr>'}</tbody>
+  </table>
+  <p class="muted">Dokumen internal. Data pribadi individu tidak dilampirkan.</p>
+  <div class="ttd">
+    <div class="ttd-box">
+      <div>${esc(tenant.shortName)}, ${esc(formatIdDate())}</div>
+      <div>Pengelola / Dukuh</div>
+      <div class="ttd-space"></div>
+      <div><strong>( ${esc(printedBy || '........................') } )</strong></div>
+    </div>
+  </div>
+  `
+  return shell(`Laporan Pejabat · ${tenant.shortName}`, body)
+}
+
+/** Embed simple QR via Google Chart API (print-friendly, no npm dep) */
+export function qrImgUrl(data: string, size = 120): string {
+  const enc = encodeURIComponent(data)
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${enc}`
+}
+

@@ -40,15 +40,18 @@
         <div>
           <h1 class="font-display text-2xl font-bold">Ringkasan</h1>
           <p class="muted text-sm mt-1">
-            Mode: {{ stats?.mode }} · {{ auth.user.nama }}
-            <span v-if="auth.user.tenantId"> · tenant {{ auth.user.tenantId }}</span>
+            Mode {{ stats?.mode || '…' }} · {{ auth.user.nama }}
+            <span v-if="auth.user.tenantId"> · {{ auth.user.tenantId }}</span>
+            · portal {{ stats?.portalPending || 0 }} · surat draft {{ stats?.suratPending || 0 }}
           </p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <a class="btn btn-ghost text-sm" href="/api/print?type=rekap" target="_blank" rel="noopener">
-            Cetak rekap PDF
+          <NuxtLink class="btn btn-ghost text-sm" to="/ops/cari">Cari</NuxtLink>
+          <NuxtLink class="btn btn-ghost text-sm" to="/ops/portal">Portal</NuxtLink>
+          <a class="btn btn-ghost text-sm" href="/api/print?type=pejabat" target="_blank" rel="noopener">
+            Laporan pejabat
           </a>
-          <NuxtLink class="btn btn-ghost text-sm" to="/ops/surat">Buat surat</NuxtLink>
+          <NuxtLink class="btn btn-primary text-sm" to="/ops/surat">Surat + QR</NuxtLink>
         </div>
       </div>
 
@@ -59,7 +62,7 @@
         </div>
       </div>
 
-      <div class="grid gap-4 mt-6 lg:grid-cols-2">
+      <div class="grid gap-4 mt-6 lg:grid-cols-3">
         <div class="card p-5">
           <h2 class="font-semibold mb-3">Mutasi</h2>
           <div class="grid grid-cols-2 gap-2 text-sm">
@@ -69,7 +72,23 @@
             <div>Meninggal: <strong>{{ stats?.meninggal || 0 }}</strong></div>
             <div>Pindah datang: <strong>{{ stats?.pindahDatang || 0 }}</strong></div>
             <div>Pindah keluar: <strong>{{ stats?.pindahKeluar || 0 }}</strong></div>
+            <div class="col-span-2 pt-1 muted text-xs">30 hari: {{ stats?.mutasiBulanIni || 0 }}</div>
           </div>
+        </div>
+        <div class="card p-5">
+          <h2 class="font-semibold mb-3">Mutasi terbaru</h2>
+          <ul class="space-y-2 text-sm max-h-64 overflow-auto">
+            <li
+              v-for="m in stats?.recentMutasi || []"
+              :key="m.id"
+              class="border-b pb-2"
+              style="border-color: var(--border)"
+            >
+              <div class="font-medium">{{ m.nama || m.nik }} · {{ m.jenis }}</div>
+              <div class="text-xs muted">{{ m.tanggal }}</div>
+            </li>
+            <li v-if="!(stats?.recentMutasi || []).length" class="muted">Belum ada mutasi.</li>
+          </ul>
         </div>
         <div class="card p-5">
           <h2 class="font-semibold mb-3">Aktivitas terbaru</h2>
@@ -80,7 +99,7 @@
               class="border-b pb-2"
               style="border-color: var(--border)"
             >
-              <div class="font-medium">{{ l.aktivitas }}</div>
+              <div class="font-medium">{{ l.human || l.aktivitas }}</div>
               <div class="text-xs muted">{{ l.user }} · {{ l.waktu }}</div>
             </li>
             <li v-if="!(stats?.recentLogs || []).length" class="muted">Belum ada log.</li>
@@ -100,6 +119,12 @@ const form = reactive({ username: '', password: '' })
 const loading = ref(false)
 const error = ref('')
 const stats = ref<any>(null)
+
+function formatNum(v: any) {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return '—'
+  return n.toLocaleString('id-ID')
+}
 
 async function loadStats() {
   if (!auth.user) return

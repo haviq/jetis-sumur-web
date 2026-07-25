@@ -7,7 +7,16 @@
           <span v-if="auth.user" class="badge hidden sm:inline-flex">{{ roleLabel }}</span>
         </div>
         <div class="flex items-center gap-2">
-          <span v-if="auth.user" class="hidden sm:inline text-xs muted">{{ auth.user.nama }}</span>
+          <button
+            v-if="auth.user"
+            class="btn btn-ghost text-xs hidden sm:inline-flex"
+            type="button"
+            title="Ctrl+K"
+            @click="goSearch"
+          >
+            ⌕ Cari
+          </button>
+          <span v-if="auth.user" class="hidden md:inline text-xs muted">{{ auth.user.nama }}</span>
           <button v-if="auth.user" class="btn btn-ghost text-xs" type="button" @click="onLogout">Keluar</button>
           <NuxtLink to="/" class="btn btn-ghost text-xs">Web publik</NuxtLink>
         </div>
@@ -36,17 +45,28 @@ const roleLabel = computed(() => {
 const tabs = computed(() => {
   const base = [
     { to: '/ops', label: 'Ringkasan' },
+    { to: '/ops/cari', label: 'Cari' },
     { to: '/ops/kk', label: 'Kartu Keluarga' },
     { to: '/ops/warga', label: 'Data Warga' },
     { to: '/ops/mutasi', label: 'Mutasi' },
     { to: '/ops/surat', label: 'Surat' },
+    { to: '/ops/portal', label: 'Portal' },
+    { to: '/ops/peta', label: 'Peta' },
+    { to: '/ops/import', label: 'Import' },
     { to: '/ops/laporan', label: 'Laporan' },
   ]
-  if (auth.isAdmin) base.push({ to: '/ops/master', label: 'Master' })
+  if (auth.isAdmin) {
+    base.push({ to: '/ops/backup', label: 'Backup' })
+    base.push({ to: '/ops/master', label: 'Master' })
+    base.push({ to: '/ops/log', label: 'Audit Log' })
+  }
   if (auth.isSuper) base.push({ to: '/ops/akun', label: 'Pengguna' })
-  if (auth.isAdmin) base.push({ to: '/ops/log', label: 'Audit Log' })
   return base
 })
+
+function goSearch() {
+  navigateTo('/ops/cari')
+}
 
 async function onLogout() {
   await auth.logout()
@@ -55,6 +75,14 @@ async function onLogout() {
 
 onMounted(() => {
   if (!auth.loaded) auth.fetchSession()
+  const onKey = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && auth.user) {
+      e.preventDefault()
+      goSearch()
+    }
+  }
+  window.addEventListener('keydown', onKey)
+  onUnmounted(() => window.removeEventListener('keydown', onKey))
 })
 
 watch(

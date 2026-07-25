@@ -3,7 +3,7 @@
 export type Role = 'super_admin' | 'admin' | 'padukuhan'
 export type AccountStatus = 'aktif' | 'nonaktif'
 export type JK = 'L' | 'P'
-export type WargaStatus = 'aktif' | 'pindah' | 'meninggal' | 'nonaktif'
+export type WargaStatus = 'aktif' | 'pindah' | 'meninggal' | 'nonaktif' | 'deleted'
 export type MutasiJenis =
   | 'masuk'
   | 'keluar'
@@ -24,6 +24,10 @@ export type Hubungan =
   | 'Famili Lain'
   | 'Lainnya'
 
+export type SuratJenis = 'domisili' | 'pengantar' | 'usaha' | 'tidak_mampu' | 'umum'
+export type SuratStatus = 'draft' | 'terbit' | 'arsip' | 'dibatalkan'
+export type PortalStatus = 'menunggu' | 'diproses' | 'selesai' | 'ditolak'
+
 export interface Akun {
   id: string
   nama: string
@@ -31,6 +35,8 @@ export interface Akun {
   passwordHash: string
   role: Role
   status: AccountStatus
+  /** Batasi akses data ke RT tertentu (role padukuhan). Kosong = semua RT. */
+  rtScope?: string[]
   lastLogin?: string
 }
 
@@ -67,6 +73,8 @@ export interface Warga {
   disabilitas?: string
   foto?: string
   status: WargaStatus
+  /** Soft-delete compliance */
+  deletedAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -86,6 +94,8 @@ export interface LogAktivitas {
   id: string
   user: string
   aktivitas: string
+  /** Human-readable mirror (optional, computed on read if missing) */
+  human?: string
   waktu: string
   ip?: string
 }
@@ -106,13 +116,42 @@ export interface Berita {
   published: boolean
 }
 
+export interface SuratArsip {
+  id: string
+  nomor: string
+  jenis: SuratJenis
+  nik: string
+  nama: string
+  keperluan: string
+  status: SuratStatus
+  /** Token untuk QR verifikasi publik */
+  verifyToken: string
+  createdBy?: string
+  createdAt: string
+  notes?: string
+}
+
+export interface PortalPengajuan {
+  id: string
+  jenis: 'surat' | 'update_data'
+  nama: string
+  nik: string
+  noHp?: string
+  keperluan: string
+  detail?: string
+  status: PortalStatus
+  catatanAdmin?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface SessionUser {
   id: string
   nama: string
   username: string
   role: Role
-  /** Multi-tenant foundation — padukuhan/desa id */
   tenantId?: string
+  rtScope?: string[]
 }
 
 export interface PublicStats {
@@ -125,8 +164,8 @@ export interface PublicStats {
   remaja: number
   dewasa: number
   lansia: number
-  perRt: { rt: string; jiwa: number; kk: number }[]
-  perRw: { rw: string; jiwa: number; kk: number }[]
+  perRt: { rt: string; kk: number; jiwa: number }[]
+  perRw: { rw: string; kk: number; jiwa: number }[]
   pendidikan: { label: string; count: number }[]
   pekerjaan: { label: string; count: number }[]
   agama: { label: string; count: number }[]
@@ -140,8 +179,27 @@ export interface AdminStats extends PublicStats {
   meninggal: number
   pindahDatang: number
   pindahKeluar: number
+  /** Mutasi 30 hari terakhir */
+  mutasiBulanIni: number
+  mutasiMasukBulan: number
+  mutasiKeluarBulan: number
   recentLogs: LogAktivitas[]
   recentMutasi: Mutasi[]
+  suratPending?: number
+  portalPending?: number
+}
+
+export interface Kk360 {
+  kk: Keluarga
+  anggota: Warga[]
+  mutasi: Mutasi[]
+  surat: SuratArsip[]
+  ringkas: {
+    jiwa: number
+    laki: number
+    perempuan: number
+    aktif: number
+  }
 }
 
 export const HUBUNGAN_LIST: Hubungan[] = [
@@ -164,6 +222,14 @@ export const MUTASI_LIST: MutasiJenis[] = [
   'meninggal',
   'pindah_datang',
   'pindah_keluar',
+]
+
+export const SURAT_JENIS_LIST: { value: SuratJenis; label: string }[] = [
+  { value: 'domisili', label: 'Keterangan Domisili' },
+  { value: 'pengantar', label: 'Surat Pengantar' },
+  { value: 'usaha', label: 'Keterangan Usaha' },
+  { value: 'tidak_mampu', label: 'Keterangan Tidak Mampu' },
+  { value: 'umum', label: 'Keterangan Umum' },
 ]
 
 export const ROLE_LABEL: Record<Role, string> = {
