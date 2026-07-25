@@ -1,126 +1,81 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getSite } from '@/lib/utils'
-import {
-  FeatureCard,
-  IconCheck,
-  IconPhone,
-  IconSearch,
-  IconSheet,
-  IconShield,
-  IconUsers,
-  SectionHeader,
-} from '@/components/ui'
+import { FeatureCard, SectionHeader } from '@/components/ui'
 
 export const metadata: Metadata = {
-  title: 'Pendataan',
+  title: 'Cara pakai',
 }
 
-const capabilities = [
+const forOps = [
   {
-    icon: <IconUsers />,
-    title: 'Master KK & jiwa',
-    desc: 'No. KK 16 digit, kepala keluarga, alamat, RT/RW, status aktif/pindah/nonaktif, plus anggota lengkap.',
+    title: 'Masuk panel (PIN)',
+    desc: 'URL panel tidak dipasang di menu publik. Hanya operator yang diberi alamat & PIN.',
   },
   {
-    icon: <IconSearch />,
-    title: 'Pencarian & filter',
-    desc: 'Cari nama, NIK, No. KK, alamat. Filter per RT dan status untuk kerja per dusun.',
+    title: 'Input / ubah KK',
+    desc: 'Isi No. KK 16 digit, kepala keluarga, alamat, RT. Tambah anggota dengan NIK & hubungan.',
   },
   {
-    icon: <IconSheet />,
-    title: 'Google Sheets sinkron',
-    desc: 'Tab kk, warga, pengajuan, meta. Bisa dibuka & diaudit langsung di spreadsheet padukuhan.',
+    title: 'Cari & filter',
+    desc: 'Cari nama/NIK/No. KK. Filter RT atau status (aktif, pindah, nonaktif).',
   },
   {
-    icon: <IconCheck />,
-    title: 'Antrian pengajuan',
-    desc: 'Form publik warga → status pending → approve/reject oleh operator dengan catatan.',
+    title: 'Review pengajuan',
+    desc: 'Tab Pengajuan: setujui atau tolak. Setelah disetujui, operator yang input ke master data.',
   },
   {
-    icon: <IconShield />,
-    title: 'Keamanan operator',
-    desc: 'PIN + sesi cookie, panel unlisted, NIK dimask di UI, rate-limit login.',
+    title: 'Lihat demografi',
+    desc: 'Ringkas per RT, kelompok usia (kalau tgl lahir terisi), dan status jiwa.',
   },
   {
-    icon: <IconPhone />,
-    title: 'Export & import CSV',
-    desc: 'Laporan ke kalurahan dan migrasi data massal dengan format header yang jelas.',
+    title: 'Export / import CSV',
+    desc: 'Export flat untuk laporan. Import massal pakai header: no_kk,kepala,rt,nik,nama,jk,hubungan,status.',
   },
 ]
 
 export default function PendataanPage() {
   const site = getSite()
   return (
-    <div className="page py-10 md:py-14 space-y-12">
-      <div className="space-y-4 max-w-3xl">
-        <p className="eyebrow">Cara kerja</p>
-        <h1 className="hero-title text-3xl md:text-5xl">
-          Sistem pendataan {site.shortName}
-        </h1>
-        <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--muted)' }}>
-          Satu alur operasional: warga/RT lapor → operator verifikasi → data tersimpan di web +
-          spreadsheet. Dirancang untuk perangkat padukuhan, bukan sekadar landing page.
+    <div className="page py-8 md:py-12 space-y-10">
+      <div className="space-y-3 max-w-2xl">
+        <p className="eyebrow">Cara pakai</p>
+        <h1 className="hero-title text-3xl md:text-4xl">Pendataan di {site.shortName}</h1>
+        <p className="text-base leading-relaxed" style={{ color: 'var(--muted)' }}>
+          Satu tempat untuk catat KK, cek antrian warga, dan unduh laporan. Cadangan data bisa di
+          Google Spreadsheet — familiar untuk perangkat yang sudah biasa Excel.
         </p>
       </div>
 
-      <section className="space-y-5">
-        <SectionHeader title="Kemampuan inti" desc="Yang dipakai setiap hari di balai / HP operator." />
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {capabilities.map((c) => (
-            <FeatureCard key={c.title} {...c} />
+      <section className="space-y-4">
+        <SectionHeader title="Untuk perangkat" desc="Urutan kerja yang biasa dipakai di balai." />
+        <div className="grid md:grid-cols-2 gap-3">
+          {forOps.map((c, i) => (
+            <FeatureCard key={c.title} index={i + 1} title={c.title} desc={c.desc} />
           ))}
         </div>
       </section>
 
-      <section className="card p-6 md:p-8 space-y-5">
-        <SectionHeader
-          eyebrow="Pipeline"
-          title="5 langkah operasional"
-          desc="SOP ringkas yang bisa ditempel di balai."
-        />
-        <ol className="space-y-3">
-          {[
-            'Operator masuk lewat panel internal (URL tidak dipublikasikan di menu).',
-            'Input / ubah Kartu Keluarga dan anggota (NIK, hubungan, RT, status).',
-            'Pencarian instan by nama, NIK, No. KK, atau RT.',
-            'Review antrian pengajuan warga (approve / reject + catatan).',
-            'Export CSV untuk laporan ke kalurahan / arsip bulanan.',
-          ].map((t, i) => (
-            <li key={t} className="card-soft p-4 flex gap-3 text-sm items-start">
-              <span
-                className="w-8 h-8 rounded-lg grid place-items-center font-bold shrink-0"
-                style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}
-              >
-                {i + 1}
-              </span>
-              <span className="pt-1" style={{ color: 'var(--muted)' }}>
-                {t}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="grid md:grid-cols-2 gap-4">
-        <div className="card p-6 space-y-3">
-          <h2 className="font-bold text-lg">Untuk warga</h2>
+      <section className="grid md:grid-cols-2 gap-3">
+        <div className="card p-5 space-y-3">
+          <h2 className="font-bold">Untuk warga</h2>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
-            Ajukan koreksi data (alamat, nomor HP, anggota baru, dll). Perubahan tidak langsung masuk —
-            menunggu verifikasi operator.
+            Lapor koreksi (alamat, HP, anggota baru, dll). Perubahan tidak langsung masuk — menunggu
+            petugas.
           </p>
           <Link href="/ajukan" className="btn btn-primary w-fit">
-            Form pengajuan
+            Form lapor data
           </Link>
         </div>
-        <div className="card p-6 space-y-3">
-          <h2 className="font-bold text-lg">Untuk perangkat</h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
-            Panel operator terpisah dari website publik. Kelola KK, jiwa, import CSV, dan pantau
-            demografi per RT.
-          </p>
+        <div className="card p-5 space-y-3">
+          <h2 className="font-bold">Yang tidak ada di sini</h2>
+          <ul className="text-sm space-y-1.5" style={{ color: 'var(--muted)' }}>
+            <li>· Open data publik (NIK / alamat lengkap tidak dibuka)</li>
+            <li>· Menu admin di navigasi situs</li>
+            <li>· Edit data resmi tanpa verifikasi operator</li>
+          </ul>
           <Link href="/privasi" className="btn btn-ghost w-fit">
-            Kebijakan privasi
+            Baca privasi
           </Link>
         </div>
       </section>

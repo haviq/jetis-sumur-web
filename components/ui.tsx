@@ -36,17 +36,30 @@ export function FeatureCard({
   title,
   desc,
   icon,
+  index,
 }: {
   title: string
   desc: string
-  icon: ReactNode
+  icon?: ReactNode
+  index?: number
 }) {
   return (
-    <article className="card p-5 space-y-3 h-full">
-      <div className="feature-icon" aria-hidden>
-        {icon}
+    <article className="card p-4 md:p-5 space-y-2 h-full">
+      <div className="flex items-center gap-2.5">
+        {typeof index === 'number' ? (
+          <span
+            className="w-7 h-7 rounded-md grid place-items-center text-xs font-bold shrink-0"
+            style={{ background: 'var(--surface-soft)', border: '1px solid var(--border)', color: 'var(--accent)' }}
+          >
+            {index}
+          </span>
+        ) : icon ? (
+          <div className="feature-icon" aria-hidden>
+            {icon}
+          </div>
+        ) : null}
+        <h3 className="font-bold text-[0.98rem] leading-snug">{title}</h3>
       </div>
-      <h3 className="font-bold text-[1.02rem]">{title}</h3>
       <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
         {desc}
       </p>
@@ -64,11 +77,11 @@ export function SectionHeader({
   desc?: string
 }) {
   return (
-    <div className="space-y-2 max-w-2xl">
+    <div className="space-y-1.5 max-w-2xl">
       {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-      <h2 className="section-title text-2xl md:text-3xl">{title}</h2>
+      <h2 className="section-title text-xl md:text-2xl">{title}</h2>
       {desc ? (
-        <p className="text-sm md:text-base" style={{ color: 'var(--muted)' }}>
+        <p className="text-sm md:text-[0.95rem]" style={{ color: 'var(--muted)' }}>
           {desc}
         </p>
       ) : null}
@@ -80,14 +93,14 @@ export function EmptyState({ title, desc }: { title: string; desc?: string }) {
   return (
     <div className="empty-state card">
       <strong>{title}</strong>
-      {desc ? <p className="text-sm max-w-sm mx-auto">{desc}</p> : null}
+      {desc ? <p className="text-sm">{desc}</p> : null}
     </div>
   )
 }
 
 export function IconUsers() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -96,38 +109,35 @@ export function IconUsers() {
   )
 }
 
+export function IconSearch() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3-3" />
+    </svg>
+  )
+}
+
 export function IconSheet() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6" />
-      <path d="M8 13h8" />
-      <path d="M8 17h8" />
-      <path d="M8 9h2" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18M9 21V9" />
     </svg>
   )
 }
 
 export function IconShield() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  )
-}
-
-export function IconSearch() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" />
     </svg>
   )
 }
 
 export function IconCheck() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M20 6 9 17l-5-5" />
     </svg>
   )
@@ -135,9 +145,9 @@ export function IconCheck() {
 
 export function IconPhone() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="5" y="2" width="14" height="20" rx="2" />
-      <path d="M12 18h.01" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <path d="M11 18h2" />
     </svg>
   )
 }

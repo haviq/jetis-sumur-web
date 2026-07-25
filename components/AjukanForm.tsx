@@ -34,7 +34,7 @@ export default function AjukanForm() {
       }
       setDoneId(data.item.id)
     } catch {
-      setError('Jaringan bermasalah')
+      setError('Jaringan bermasalah — coba lagi')
     } finally {
       setLoading(false)
     }
@@ -42,21 +42,20 @@ export default function AjukanForm() {
 
   if (doneId) {
     return (
-      <div className="card p-6 md:p-8 space-y-4 text-center glow-ring">
-        <p className="eyebrow justify-center">Terkirim</p>
-        <p className="font-mono text-2xl font-extrabold" style={{ color: 'var(--accent)' }}>
-          {doneId}
+      <div className="card p-6 space-y-3 text-center">
+        <p className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
+          Pengajuan masuk
         </p>
+        <p className="font-mono text-xl font-bold tracking-wide">{doneId}</p>
         <p className="text-sm leading-relaxed" style={{ color: 'var(--muted)' }}>
-          Simpan kode ini. Petugas akan meninjau pengajuan Anda. Perubahan tidak langsung masuk data
-          resmi.
+          Simpan kode ini. Petugas akan meninjau. Data resmi belum berubah.
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-1">
           <button type="button" className="btn btn-ghost" onClick={() => setDoneId(null)}>
-            Ajukan lagi
+            Lapor lagi
           </button>
           <Link href="/" className="btn btn-primary">
-            Kembali beranda
+            Beranda
           </Link>
         </div>
       </div>
@@ -64,7 +63,7 @@ export default function AjukanForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="card p-6 md:p-7 space-y-4">
+    <form onSubmit={onSubmit} className="card p-5 md:p-6 space-y-3.5">
       <div>
         <label className="label" htmlFor="nama">
           Nama pelapor *
@@ -107,7 +106,7 @@ export default function AjukanForm() {
       </div>
       <div>
         <label className="label" htmlFor="cat">
-          Data yang ingin diubah / ditambahkan *
+          Apa yang perlu diubah? *
         </label>
         <textarea
           id="cat"
@@ -116,7 +115,7 @@ export default function AjukanForm() {
           minLength={8}
           value={catatan}
           onChange={(e) => setCatatan(e.target.value)}
-          placeholder="Contoh: ganti nomor HP, tambah anggota, koreksi alamat…"
+          placeholder="Contoh: ganti nomor HP, tambah anak, koreksi alamat…"
         />
       </div>
       {error && (
@@ -125,7 +124,7 @@ export default function AjukanForm() {
         </p>
       )}
       <button type="submit" className="btn btn-primary w-full" disabled={loading}>
-        {loading ? 'Mengirim…' : 'Kirim pengajuan'}
+        {loading ? 'Mengirim…' : 'Kirim'}
       </button>
     </form>
   )

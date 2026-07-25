@@ -1,9 +1,9 @@
 {
   "name": "Padukuhan Jetis Sumur",
   "shortName": "Jetis Sumur",
-  "productName": "Jetis Sumur Data",
-  "tagline": "Pendataan warga yang rapi — tersimpan di spreadsheet, dikelola dari web.",
-  "subtitle": "Sistem operasional padukuhan",
+  "productName": "Data Warga Jetis Sumur",
+  "tagline": "Buku data KK & jiwa padukuhan — diweb, di spreadsheet, dipakai perangkat.",
+  "subtitle": "Padukuhan Jetis Sumur",
   "alamat": "Padukuhan Jetis Sumur (lengkapi kalurahan/kapanewon saat data resmi tersedia)",
   "wilayah": {
     "padukuhan": "Jetis Sumur",
@@ -17,5 +17,5 @@
   "whatsapp": "",
   "email": "",
   "jamLayanan": "Senin–Jumat 08.00–14.00 WIB",
-  "privacyNote": "Data warga dikelola perangkat padukuhan untuk keperluan administrasi lokal. Bukan open data publik."
+  "privacyNote": "Data warga hanya untuk administrasi padukuhan. Tidak dipublikasikan. Akses operator lewat PIN."
 }
