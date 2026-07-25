@@ -16,7 +16,7 @@
         <NuxtLink v-for="t in tabs" :key="t.to" :to="t.to" class="nav-link whitespace-nowrap">{{ t.label }}</NuxtLink>
       </nav>
     </div>
-    <div class="container-page py-6">
+    <div class="container-page py-6 page-frame">
       <slot />
     </div>
   </div>

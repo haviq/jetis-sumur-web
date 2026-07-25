@@ -25,7 +25,14 @@ export default defineNuxtConfig({
         },
       ],
     },
-    pageTransition: { name: 'page', mode: 'out-in' },
+    pageTransition: {
+      name: 'page',
+      mode: 'out-in',
+    },
+    layoutTransition: {
+      name: 'page',
+      mode: 'out-in',
+    },
   },
   runtimeConfig: {
     authSecret: process.env.AUTH_SECRET || process.env.ADMIN_PIN || 'jetis-sumur-dev-secret',

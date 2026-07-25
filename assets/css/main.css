@@ -211,7 +211,9 @@ table.data tbody tr:hover td {
 
 .nav-link {
   @apply rounded-lg px-3 py-2 text-sm font-medium transition;
+  position: relative;
   color: var(--muted);
+  overflow: hidden;
 }
 
 .nav-link:hover {
@@ -222,6 +224,31 @@ table.data tbody tr:hover td {
 .nav-link.router-link-active {
   color: var(--text);
   background: var(--accent-dim);
+}
+
+/* Active tab: underline slides top → bottom into place */
+.nav-link.router-link-active::after {
+  content: '';
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.28rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  transform-origin: top center;
+  animation: nav-tab-slide 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes nav-tab-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
 }
 
 .stat-num {
@@ -236,32 +263,55 @@ table.data tbody tr:hover td {
   @apply font-display text-xl sm:text-2xl font-bold;
 }
 
-/* —— Page / route motion (framer-like) —— */
-.page-enter-active,
+/* —— Page / route motion: slide top → bottom on navbar tab click —— */
+.page-enter-active {
+  transition:
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
 .page-leave-active {
   transition:
-    opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.28s cubic-bezier(0.4, 0, 1, 1),
+    transform 0.28s cubic-bezier(0.4, 0, 1, 1);
+  will-change: transform, opacity;
 }
+/* Halaman baru masuk dari atas */
 .page-enter-from {
   opacity: 0;
-  transform: translateY(14px) scale(0.985);
+  transform: translateY(-28px);
+}
+.page-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Halaman lama keluar ke bawah */
+.page-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-8px) scale(0.99);
+  transform: translateY(22px);
+}
+
+/* Wrapper main: cegah jump horizontal saat slide */
+.page-frame {
+  overflow-x: clip;
+  position: relative;
 }
 
 .menu-enter-active,
 .menu-leave-active {
   transition:
-    opacity 0.22s ease,
-    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.28s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    max-height 0.28s ease;
 }
 .menu-enter-from,
 .menu-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateY(-12px);
 }
 
 .hero-grid {
