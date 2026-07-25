@@ -1,159 +1,51 @@
-# Jetis Sumur Data
+# Sistem Informasi Pendataan Warga — Padukuhan Jetis Sumur
 
-### Sistem pendataan warga padukuhan — web operator + Google Sheets ready
+**Stack (sesuai PRD):** Nuxt 3 · Vue 3 · TypeScript · Tailwind · Pinia · Google Sheets · Vercel
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=nextdotjs)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/license-MIT-emerald?style=flat-square)](#license)
+Live: https://jetis-sumur-web.vercel.app
 
-> **Padukuhan Jetis Sumur** · Pendataan KK & jiwa yang rapi, mobile-first, siap diaudit di spreadsheet.
+## Fitur
 
-<p align="center">
-  <img src="docs/og-cover.svg" alt="Jetis Sumur Data" width="720" />
-</p>
+### Website publik
+- Beranda, Profil, Struktur, Statistik, Berita, Kontak
+- Statistik agregat (tanpa NIK/nama/HP)
+- Dark/light mode
 
----
+### Dashboard pengelola (`/ops` — **tidak ada di menu publik**)
+| Role | Akses |
+|------|--------|
+| Padukuhan | Dashboard, CRUD KK/warga, mutasi, export |
+| Admin | + master data, audit log |
+| Super Admin | + kelola pengguna |
 
-## Mengapa produk ini
+### Database
+Google Spreadsheet tabs: `akun`, `keluarga`, `warga`, `mutasi`, `log_aktivitas`, `master`, `berita`
 
-Perangkat desa sering menyimpan data warga di kertas atau file Excel di satu laptop. **Jetis Sumur Data** memberi:
+## Akun demo
+| Username | Password | Role |
+|----------|----------|------|
+| superadmin | superadmin2026 | Super Admin |
+| admin | admin2026 | Admin |
+| padukuhan | padukuhan2026 | Padukuhan |
 
-| Untuk perangkat | Untuk developer / KKN |
-|-----------------|------------------------|
-| Cari NIK/nama dalam detik | Next.js App Router + TS |
-| Input KK dari HP | PIN session aman |
-| Export CSV 1 klik | Mock DB → Sheets path |
-| Form pengajuan warga | PRD + DESIGN + SOP |
-
-Bukan sekadar profil desa — ini **sistem operasional**.
-
----
-
-## Fitur V1
-
-- **Landing premium** dark + emerald (product SaaS desa)
-- **Panel operator** (URL internal, tidak di navbar/sitemap)
-- **CRUD Kartu Keluarga** + validasi NIK/No.KK 16 digit
-- **Detail KK + CRUD anggota** (edit / nonaktif)
-- **Dashboard statistik** KK / jiwa / L-P / per RT
-- **Pencarian & filter RT**
-- **Pengajuan update** dari warga (antrian pending)
-- **Export + Import CSV**
-- **Seed data demo** fiktif
-- **Google Sheets full sync** (JWT service account, no heavy SDK)
-
----
-
-## Arsitektur
-
-```
-┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Browser    │────▶│  Next.js (Vercel)│────▶│  Mock store     │
-│  Publik +   │     │  /api/* + /ops   │     │  (default)      │
-│  Operator   │     │                  │────▶│  Google Sheets  │
-└─────────────┘     └──────────────────┘     │  (saat env set) │
-                                             └─────────────────┘
-```
-
----
-
-## Quick start
+## Setup lokal
 
 ```bash
-git clone https://github.com/haviq/jetis-sumur-web.git
-cd jetis-sumur-web
-cp .env.example .env.local
-# set ADMIN_PIN=your-secret-pin
-npm install
-npm run dev
+cp .env.example .env
+# isi SHEETS_SPREADSHEET_ID + GOOGLE_SERVICE_ACCOUNT_*
+pnpm install
+pnpm dev
 ```
 
-Buka [http://localhost:3000](http://localhost:3000)
+## Env Vercel
+- `AUTH_SECRET`
+- `ADMIN_PIN` (opsional fallback)
+- `SHEETS_SPREADSHEET_ID`
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` (PEM, baris diganti `\n`)
+- `NUXT_PUBLIC_SITE_URL`
 
-Panel operator: **`/ops`** (jangan dipasang di menu publik)
+Share spreadsheet ke service account sebagai **Editor**.
 
----
-
-## Environment
-
-| Variable | Wajib | Keterangan |
-|----------|-------|------------|
-| `ADMIN_PIN` | Produksi | PIN operator (≥4, rekom 8+) |
-| `NEXT_PUBLIC_SITE_URL` | Opsional | Canonical URL |
-| `SHEETS_SPREADSHEET_ID` | Sheets | ID spreadsheet |
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Sheets | Email SA |
-| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | Sheets | Private key (`\n` escaped) |
-
-Tanpa Sheets env → **mode `mock`** (demo in-memory).
-
----
-
-## Skrip
-
-```bash
-npm run dev        # development
-npm run build      # production build
-npm run start      # serve build
-npm run typecheck  # tsc --noEmit
-```
-
----
-
-## Struktur repo
-
-```
-app/                 # routes + API
-components/          # UI
-content/site.json    # branding padukuhan
-lib/                 # db, auth, types, sheets stub
-PRD.md               # product requirements
-DESIGN.md            # design system
-SOP-ADMIN.md         # panduan operator
-```
-
----
-
-## Keamanan & privasi
-
-- Path operator **unlisted** + `robots` disallow
-- Cookie httpOnly + HMAC session
-- NIK di-mask di tabel operator list
-- Data seed **fiktif** — jangan commit NIK warga asli
-
----
-
-## Sheets
-
-Lihat panduan lengkap: [docs/SHEETS-SETUP.md](./docs/SHEETS-SETUP.md)
-
-## Roadmap
-
-- [x] PRD + DESIGN + MVP mock DB  
-- [x] Operator panel + export + pengajuan  
-- [x] Detail KK + CRUD anggota  
-- [x] Google Sheets full read/write  
-- [x] Import CSV bulk  
-- [ ] Role per-RT  
-- [ ] Grafik demografi  
-- [ ] Import Excel (.xlsx) native
-
----
-
-## Dokumentasi produk
-
-- [PRD.md](./PRD.md) — scope, FR, model data Sheets  
-- [DESIGN.md](./DESIGN.md) — tokens & UI  
-- [SOP-ADMIN.md](./SOP-ADMIN.md) — operasional harian  
-
----
-
-## Lisensi
-
-MIT — bebas dipakai untuk padukuhan / KKN, cantumkan kredit jika di-fork.
-
----
-
-<p align="center">
-  <b>Jetis Sumur Data</b> · dibangun untuk administrasi padukuhan yang lebih rapi
-</p>
+## PRD
+Lihat `docs/PRD-v2.md`.

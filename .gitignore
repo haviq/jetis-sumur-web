@@ -1,15 +1,26 @@
-next
+# Nuxt
+.nuxt
+.output
+.data
+dist
 node_modules
-.env
-.env.local
-.env*.local
-.DS_Store
-*.pem
-.vercel
-.secrets/
-service-account*.json
-google-credentials*.json
-*-sa.json
-sa.json
-*.tsbuildinfo
 .next
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+.secrets/
+
+# Logs / OS
+*.log
+.DS_Store
+.vercel
+.idea
+.vscode
+
+# TS
+*.tsbuildinfo
+
+# Hermes
+.hermes/

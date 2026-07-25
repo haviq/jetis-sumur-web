@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "framework": "nextjs"
+  "buildCommand": "nuxt build",
+  "framework": "nuxtjs",
+  "regions": ["sin1"]
 }
