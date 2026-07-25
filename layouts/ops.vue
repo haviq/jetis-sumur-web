@@ -39,6 +39,7 @@ const tabs = computed(() => {
     { to: '/ops/kk', label: 'Kartu Keluarga' },
     { to: '/ops/warga', label: 'Data Warga' },
     { to: '/ops/mutasi', label: 'Mutasi' },
+    { to: '/ops/surat', label: 'Surat' },
     { to: '/ops/laporan', label: 'Laporan' },
   ]
   if (auth.isAdmin) base.push({ to: '/ops/master', label: 'Master' })

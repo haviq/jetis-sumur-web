@@ -3,9 +3,29 @@
     <div v-if="!auth.user" class="muted">Silakan login di /ops</div>
     <div v-else>
       <h1 class="font-display text-2xl font-bold">Laporan & Export</h1>
-      <p class="text-sm muted mt-1">Unduh rekap CSV (buka di Excel / Sheets)</p>
+      <p class="text-sm muted mt-1">CSV untuk Excel/Sheets · PDF lewat cetak browser</p>
 
-      <div class="grid gap-3 mt-6 sm:grid-cols-2">
+      <h2 class="font-semibold mt-6 mb-3">Cetak / PDF</h2>
+      <div class="grid gap-3 sm:grid-cols-3">
+        <a class="card card-hover p-5" href="/api/print?type=rekap" target="_blank" rel="noopener">
+          <div class="font-semibold">Rekap agregat</div>
+          <div class="text-sm muted mt-1">Total jiwa, KK, demografi, per RT</div>
+          <div class="text-xs mt-3" style="color: var(--accent)">Buka cetak →</div>
+        </a>
+        <a class="card card-hover p-5" href="/api/print?type=warga" target="_blank" rel="noopener">
+          <div class="font-semibold">Daftar warga</div>
+          <div class="text-sm muted mt-1">Tabel NIK + nama + RT (login required)</div>
+          <div class="text-xs mt-3" style="color: var(--accent)">Buka cetak →</div>
+        </a>
+        <NuxtLink class="card card-hover p-5" to="/ops/surat">
+          <div class="font-semibold">Surat keterangan</div>
+          <div class="text-sm muted mt-1">Domisili, pengantar, usaha, SKTM</div>
+          <div class="text-xs mt-3" style="color: var(--accent)">Form surat →</div>
+        </NuxtLink>
+      </div>
+
+      <h2 class="font-semibold mt-8 mb-3">Export CSV</h2>
+      <div class="grid gap-3 sm:grid-cols-2">
         <a
           v-for="x in exports"
           :key="x.type"
@@ -33,7 +53,7 @@
             <code class="text-xs">nik,nama,nomor_kk,jk,tanggal_lahir,agama,pendidikan,pekerjaan,hubungan_kk,status</code>
           </li>
         </ul>
-        <p class="text-xs muted mt-3">Import lewat menu Kartu Keluarga / Data Warga (tombol Import CSV).</p>
+        <p class="text-xs muted mt-3">Import lewat menu Kartu Keluarga / Data Warga.</p>
       </div>
     </div>
   </div>
@@ -47,7 +67,7 @@ const exports = [
   { type: 'warga', title: 'Rekap warga', desc: 'Seluruh jiwa + RT/RW/kepala KK' },
   { type: 'kk', title: 'Rekap KK', desc: 'Daftar kartu keluarga' },
   { type: 'mutasi', title: 'Rekap mutasi', desc: 'Riwayat masuk/keluar/lahir/meninggal' },
-  { type: 'rekap', title: 'Rekap agregat', desc: 'Total, demografi, agama, RT' },
+  { type: 'rekap', title: 'Rekap agregat CSV', desc: 'Total, demografi, agama, RT' },
 ]
 
 onMounted(async () => {

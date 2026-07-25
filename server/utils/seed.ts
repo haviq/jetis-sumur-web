@@ -40,13 +40,21 @@ export function defaultMaster(): MasterItem[] {
   return rows
 }
 
+/**
+ * Seed passwords — strong defaults for new installs only.
+ * Existing Sheets accounts keep their stored password_hash.
+ * Credentials are NOT shown on the public login page.
+ */
 export function defaultAkun(): Akun[] {
+  const superPass = process.env.SEED_SUPER_PASSWORD || 'JsSuper!2026x'
+  const adminPass = process.env.SEED_ADMIN_PASSWORD || 'JsAdmin!2026x'
+  const paduPass = process.env.SEED_PADUKUHAN_PASSWORD || 'JsPadu!2026x'
   return [
     {
       id: 'u_super',
       nama: 'Super Admin',
       username: 'superadmin',
-      passwordHash: hashPassword('superadmin2026'),
+      passwordHash: hashPassword(superPass),
       role: 'super_admin',
       status: 'aktif',
     },
@@ -54,7 +62,7 @@ export function defaultAkun(): Akun[] {
       id: 'u_admin',
       nama: 'Admin Padukuhan',
       username: 'admin',
-      passwordHash: hashPassword('admin2026'),
+      passwordHash: hashPassword(adminPass),
       role: 'admin',
       status: 'aktif',
     },
@@ -62,7 +70,7 @@ export function defaultAkun(): Akun[] {
       id: 'u_padukuhan',
       nama: 'Perangkat Padukuhan',
       username: 'padukuhan',
-      passwordHash: hashPassword('padukuhan2026'),
+      passwordHash: hashPassword(paduPass),
       role: 'padukuhan',
       status: 'aktif',
     },

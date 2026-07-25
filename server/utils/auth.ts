@@ -2,7 +2,7 @@ import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypt
 import type { Role, SessionUser } from './types'
 
 const COOKIE = 'jetis_sess'
-const MAX_AGE_SEC = 60 * 60 * 12
+const MAX_AGE_SEC = 60 * 60 * 8 // 8 jam
 
 function secret(): string {
   return (
@@ -38,6 +38,7 @@ export function mintSession(user: SessionUser, now = Date.now()): string {
     nama: user.nama,
     username: user.username,
     role: user.role,
+    tenantId: user.tenantId || 'jetis-sumur',
     exp,
   })
   const body = Buffer.from(payload).toString('base64url')
@@ -64,6 +65,7 @@ export function verifySession(token: string | undefined | null): SessionUser | n
       nama: data.nama,
       username: data.username,
       role: data.role as Role,
+      tenantId: data.tenantId || 'jetis-sumur',
     }
   } catch {
     return null
@@ -95,11 +97,36 @@ export function sessionFromEvent(event: { node: { req: { headers: { cookie?: str
 
 export function canAccess(
   role: Role,
-  need: 'read' | 'write' | 'mutasi' | 'import' | 'master' | 'users' | 'audit' | 'settings',
+  need: 'read' | 'write' | 'mutasi' | 'import' | 'master' | 'users' | 'audit' | 'settings' | 'print',
 ): boolean {
   if (role === 'super_admin') return true
   if (role === 'admin') return need !== 'users' && need !== 'settings'
-  return need === 'read' || need === 'write'
+  // padukuhan: CRUD + print + mutasi, no master/users/settings
+  return need === 'read' || need === 'write' || need === 'mutasi' || need === 'import' || need === 'print'
+}
+
+/** Simple in-memory login rate limit (per instance / warm lambda) */
+const loginHits = new Map<string, { n: number; reset: number }>()
+
+export function checkLoginRate(ip: string, limit = 12, windowMs = 10 * 60 * 1000): boolean {
+  const now = Date.now()
+  const key = ip || 'unknown'
+  const cur = loginHits.get(key)
+  if (!cur || now > cur.reset) {
+    loginHits.set(key, { n: 1, reset: now + windowMs })
+    return true
+  }
+  cur.n += 1
+  if (cur.n > limit) return false
+  return true
+}
+
+export function clientIp(event: { node: { req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string } } } }): string {
+  const h = event.node.req.headers
+  const xf = h['x-forwarded-for']
+  if (typeof xf === 'string' && xf.length) return xf.split(',')[0].trim()
+  if (Array.isArray(xf) && xf[0]) return String(xf[0]).split(',')[0].trim()
+  return event.node.req.socket?.remoteAddress || 'unknown'
 }
 
 export { COOKIE as SESS_COOKIE, MAX_AGE_SEC }

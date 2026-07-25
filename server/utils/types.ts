@@ -111,6 +111,8 @@ export interface SessionUser {
   nama: string
   username: string
   role: Role
+  /** Multi-tenant foundation — padukuhan/desa id */
+  tenantId?: string
 }
 
 export interface PublicStats {

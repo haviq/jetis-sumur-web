@@ -29,12 +29,13 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     authSecret: process.env.AUTH_SECRET || process.env.ADMIN_PIN || 'jetis-sumur-dev-secret',
-    adminPin: process.env.ADMIN_PIN || 'jetis2026',
+    adminPin: process.env.ADMIN_PIN || '',
     sheetsSpreadsheetId: process.env.SHEETS_SPREADSHEET_ID || '',
     googleSaEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '',
     googleSaPrivateKey: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || '',
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || '',
+      tenantId: process.env.NUXT_PUBLIC_TENANT_ID || process.env.TENANT_ID || 'jetis-sumur',
     },
   },
   nitro: {

@@ -1,5 +1,7 @@
 export function useSite() {
   return {
+    id: 'jetis-sumur',
+    slug: 'jetis-sumur',
     name: 'Padukuhan Jetis Sumur',
     shortName: 'Jetis Sumur',
     productName: 'Data Warga Jetis Sumur',
@@ -7,6 +9,14 @@ export function useSite() {
     alamat: 'Padukuhan Jetis Sumur, DI Yogyakarta',
     jamLayanan: 'Senin–Jumat 08.00–14.00 WIB',
     rtList: ['01', '02', '03', '04'],
+    rwDefault: '01',
+    wilayah: {
+      padukuhan: 'Jetis Sumur',
+      kalurahan: 'TBA',
+      kapanewon: 'TBA',
+      kabupaten: 'TBA',
+      provinsi: 'DI Yogyakarta',
+    },
   }
 }
 

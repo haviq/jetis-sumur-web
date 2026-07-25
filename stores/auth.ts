@@ -5,6 +5,7 @@ export type SessionUser = {
   nama: string
   username: string
   role: 'super_admin' | 'admin' | 'padukuhan'
+  tenantId?: string
 }
 
 export const useAuthStore = defineStore('auth', {
