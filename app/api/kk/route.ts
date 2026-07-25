@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
 import { requestIsAdmin } from '@/lib/admin-auth'
-import { getStats, listKk, listPengajuan, listWarga, upsertKk, deleteKk } from '@/lib/db'
+import {
+  ensureHydrated,
+  getStats,
+  listKk,
+  listPengajuan,
+  listWarga,
+  upsertKk,
+  deleteKk,
+} from '@/lib/db'
 import { isNik } from '@/lib/utils'
 import type { KKStatus } from '@/lib/types'
 
@@ -11,6 +19,7 @@ export async function GET(req: Request) {
   if (!requestIsAdmin(req)) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
   }
+  await ensureHydrated()
   const url = new URL(req.url)
   const kind = url.searchParams.get('kind') || 'kk'
   const q = url.searchParams.get('q') || undefined
@@ -18,7 +27,10 @@ export async function GET(req: Request) {
   const status = (url.searchParams.get('status') || undefined) as KKStatus | undefined
 
   if (kind === 'stats') {
-    return NextResponse.json({ ok: true, stats: getStats() }, { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json(
+      { ok: true, stats: await getStats() },
+      { headers: { 'Cache-Control': 'no-store' } },
+    )
   }
   if (kind === 'warga') {
     return NextResponse.json(
@@ -28,7 +40,7 @@ export async function GET(req: Request) {
   }
   if (kind === 'pengajuan') {
     return NextResponse.json(
-      { ok: true, items: listPengajuan() },
+      { ok: true, items: await listPengajuan() },
       { headers: { 'Cache-Control': 'no-store' } },
     )
   }
@@ -53,7 +65,7 @@ export async function POST(req: Request) {
 
   if (action === 'delete_kk') {
     const id = String(body.id || '')
-    const ok = deleteKk(id)
+    const ok = await deleteKk(id)
     return NextResponse.json({ ok })
   }
 
@@ -66,7 +78,7 @@ export async function POST(req: Request) {
     if (!isNik(noKk) || !isNik(nikKk) || kepalaKeluarga.length < 3 || alamat.length < 3) {
       return NextResponse.json({ ok: false, error: 'invalid_payload' }, { status: 400 })
     }
-    const row = upsertKk({
+    const row = await upsertKk({
       id: body.id ? String(body.id) : undefined,
       noKk,
       kepalaKeluarga,

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createPengajuan, listPengajuan, reviewPengajuan } from '@/lib/db'
+import { createPengajuan, listPengajuan, reviewPengajuan, ensureHydrated } from '@/lib/db'
 import { requestIsAdmin } from '@/lib/admin-auth'
 
 export const runtime = 'nodejs'
@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   if (!requestIsAdmin(req)) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
   }
-  return NextResponse.json({ ok: true, items: listPengajuan() })
+  return NextResponse.json({ ok: true, items: await listPengajuan() })
 }
 
 export async function POST(req: Request) {
@@ -20,18 +20,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'invalid_json' }, { status: 400 })
   }
 
-  // Admin review
   if (body.action === 'review') {
     if (!requestIsAdmin(req)) {
       return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
     }
     const status = body.status === 'approved' ? 'approved' : 'rejected'
-    const item = reviewPengajuan(String(body.id || ''), status, body.adminNote ? String(body.adminNote) : undefined)
+    const item = await reviewPengajuan(
+      String(body.id || ''),
+      status,
+      body.adminNote ? String(body.adminNote) : undefined,
+    )
     if (!item) return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 })
     return NextResponse.json({ ok: true, item })
   }
 
-  // Public create
+  await ensureHydrated()
   const namaPelapor = String(body.namaPelapor || '').trim()
   const payload = (body.payload && typeof body.payload === 'object' ? body.payload : {}) as Record<
     string,
@@ -40,7 +43,7 @@ export async function POST(req: Request) {
   if (namaPelapor.length < 3) {
     return NextResponse.json({ ok: false, error: 'invalid_payload' }, { status: 400 })
   }
-  const item = createPengajuan({
+  const item = await createPengajuan({
     jenis: body.jenis === 'baru' ? 'baru' : 'update',
     namaPelapor,
     telepon: body.telepon ? String(body.telepon) : undefined,

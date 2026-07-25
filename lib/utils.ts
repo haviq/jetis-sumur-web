@@ -4,6 +4,7 @@ export function getSite() {
   return site
 }
 
+/** Safe for client + server components */
 export function maskNik(nik: string): string {
   const d = (nik || '').replace(/\D/g, '')
   if (d.length < 8) return '****'

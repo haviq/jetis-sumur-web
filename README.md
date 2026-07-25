@@ -35,12 +35,13 @@ Bukan sekadar profil desa — ini **sistem operasional**.
 - **Landing premium** dark + emerald (product SaaS desa)
 - **Panel operator** (URL internal, tidak di navbar/sitemap)
 - **CRUD Kartu Keluarga** + validasi NIK/No.KK 16 digit
+- **Detail KK + CRUD anggota** (edit / nonaktif)
 - **Dashboard statistik** KK / jiwa / L-P / per RT
 - **Pencarian & filter RT**
 - **Pengajuan update** dari warga (antrian pending)
-- **Export CSV** (flat / kk / warga)
+- **Export + Import CSV**
 - **Seed data demo** fiktif
-- **Google Sheets adapter scaffold** (env-ready)
+- **Google Sheets full sync** (JWT service account, no heavy SDK)
 
 ---
 
@@ -122,14 +123,20 @@ SOP-ADMIN.md         # panduan operator
 
 ---
 
+## Sheets
+
+Lihat panduan lengkap: [docs/SHEETS-SETUP.md](./docs/SHEETS-SETUP.md)
+
 ## Roadmap
 
 - [x] PRD + DESIGN + MVP mock DB  
 - [x] Operator panel + export + pengajuan  
-- [ ] Google Sheets full read/write  
-- [ ] Import bulk Excel  
+- [x] Detail KK + CRUD anggota  
+- [x] Google Sheets full read/write  
+- [x] Import CSV bulk  
 - [ ] Role per-RT  
 - [ ] Grafik demografi  
+- [ ] Import Excel (.xlsx) native
 
 ---
 

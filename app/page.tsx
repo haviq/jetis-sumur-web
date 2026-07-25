@@ -2,9 +2,11 @@ import Link from 'next/link'
 import { getStats } from '@/lib/db'
 import { getSite } from '@/lib/utils'
 
-export default function HomePage() {
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
   const site = getSite()
-  const stats = getStats()
+  const stats = await getStats()
 
   return (
     <div className="page py-10 md:py-16 space-y-12">
@@ -17,8 +19,7 @@ export default function HomePage() {
             {site.subtitle}
           </p>
           <h1 className="hero-title text-4xl md:text-5xl lg:text-6xl">
-            Pendataan warga{' '}
-            <span style={{ color: 'var(--accent)' }}>{site.shortName}</span>
+            Pendataan warga <span style={{ color: 'var(--accent)' }}>{site.shortName}</span>
           </h1>
           <p className="text-base md:text-lg max-w-xl" style={{ color: 'var(--muted)' }}>
             {site.tagline} Dirancang untuk perangkat padukuhan: cepat di HP, bisa diaudit di Google
@@ -88,7 +89,7 @@ export default function HomePage() {
           },
           {
             t: 'Operator di web',
-            d: 'Cari NIK/nama, kelola KK & anggota, export CSV. Admin path tidak dipublikasikan.',
+            d: 'Cari NIK/nama, kelola KK & anggota, export/import CSV. Admin path tidak dipublikasikan.',
           },
           {
             t: 'Siap di-GitHub',

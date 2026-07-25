@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { requestIsAdmin } from '@/lib/admin-auth'
-import { getKk, listWargaByKk, upsertWarga, deleteWarga } from '@/lib/db'
+import {
+  ensureHydrated,
+  getKk,
+  listWargaByKk,
+  upsertWarga,
+  deleteWarga,
+  hardDeleteWarga,
+} from '@/lib/db'
 import { isNik } from '@/lib/utils'
 import type { JK, Hubungan, WargaStatus } from '@/lib/types'
 
@@ -11,6 +18,7 @@ export async function GET(req: Request) {
   if (!requestIsAdmin(req)) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
   }
+  await ensureHydrated()
   const id = new URL(req.url).searchParams.get('id') || ''
   const kk = getKk(id)
   if (!kk) return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 })
@@ -33,7 +41,10 @@ export async function POST(req: Request) {
   }
 
   if (body.action === 'delete') {
-    return NextResponse.json({ ok: deleteWarga(String(body.id || '')) })
+    return NextResponse.json({ ok: await deleteWarga(String(body.id || '')) })
+  }
+  if (body.action === 'hard_delete') {
+    return NextResponse.json({ ok: await hardDeleteWarga(String(body.id || '')) })
   }
 
   const kkId = String(body.kkId || '')
@@ -43,7 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'invalid_payload' }, { status: 400 })
   }
 
-  const row = upsertWarga({
+  const row = await upsertWarga({
     id: body.id ? String(body.id) : undefined,
     kkId,
     nik,
