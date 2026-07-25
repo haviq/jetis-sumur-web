@@ -9,39 +9,43 @@
       <div class="atm-glow atm-glow--c" />
     </div>
 
-    <!-- Preloader: dual layer + noise + typewriter + dual curtain -->
+    <!--
+      Preloader sequence (exact):
+      1) typing  — ketik PADUKUHAN JETIS SUMUR
+      2) down    — panel depan slide ATAS → BAWAH
+      3) up      — panel belakang slide BAWAH → ATAS (buka web)
+      4) done
+    -->
     <div
+      v-if="phase !== 'done'"
       class="preloader"
-      :class="{
-        'is-done': phase === 'done',
-        'is-exit-down': phase === 'exit-down',
-        'is-exit-up': phase === 'exit-up',
-      }"
+      :class="`is-${phase}`"
       aria-hidden="true"
     >
-      <div class="preloader-scrim" />
-      <div class="preloader-curtain preloader-curtain--top">
+      <!-- Layer belakang: exit naik (bawah → atas off-screen) -->
+      <div class="preloader-back">
         <div class="preloader-noise" />
+        <div class="preloader-orb" />
       </div>
-      <div class="preloader-curtain preloader-curtain--bottom">
-        <div class="preloader-noise" />
-      </div>
-      <div class="preloader-orb" />
 
-      <div class="preloader-center">
-        <div class="preloader-mark">JS</div>
-        <div class="preloader-type" aria-label="Padukuhan Jetis Sumur">
-          <span
-            v-for="(ch, i) in typedChars"
-            :key="i"
-            class="preloader-char"
-            :class="{ space: ch === ' ' }"
-          >{{ ch === ' ' ? '\u00A0' : ch }}</span>
-          <span class="preloader-caret" :class="{ blink: typingDone }" />
-        </div>
-        <div class="preloader-sub">Pendataan Warga</div>
-        <div class="preloader-bar" :class="{ run: phase !== 'idle' && phase !== 'done' }">
-          <i />
+      <!-- Layer depan: typewriter + exit turun (atas → bawah) -->
+      <div class="preloader-front">
+        <div class="preloader-noise" />
+        <div class="preloader-center">
+          <div class="preloader-mark">JS</div>
+          <div class="preloader-type" aria-label="Padukuhan Jetis Sumur">
+            <span
+              v-for="(ch, i) in typedChars"
+              :key="`${i}-${ch}`"
+              class="preloader-char"
+              :class="{ space: ch === ' ' }"
+            >{{ ch === ' ' ? '\u00A0' : ch }}</span>
+            <span class="preloader-caret" :class="{ blink: typingDone }" />
+          </div>
+          <div class="preloader-sub">Pendataan Warga</div>
+          <div class="preloader-bar" :class="{ run: phase === 'typing' || phase === 'hold' }">
+            <i />
+          </div>
         </div>
       </div>
     </div>
@@ -130,12 +134,17 @@ const open = ref(false)
 const theme = ref<'dark' | 'light'>('dark')
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
-/** idle → typing → exit-down → exit-up → done */
-const phase = ref<'idle' | 'typing' | 'exit-down' | 'exit-up' | 'done'>('idle')
+/**
+ * Sequence:
+ * idle → typing → hold → down (front slides top→bottom) → up (back slides bottom→top) → done
+ */
+const phase = ref<'idle' | 'typing' | 'hold' | 'down' | 'up' | 'done'>('idle')
 const TYPE_TEXT = 'PADUKUHAN JETIS SUMUR'
 const typedLen = ref(0)
 const typingDone = ref(false)
 const typedChars = computed(() => TYPE_TEXT.slice(0, typedLen.value).split(''))
+
+const PRELOADER_KEY = 'jetis-preloader-v3'
 
 const links = [
   { to: '/', label: 'Beranda' },
@@ -168,29 +177,39 @@ async function runPreloader() {
     phase.value = 'done'
     return
   }
-  if (import.meta.client && sessionStorage.getItem('jetis-preloader') === '1') {
+
+  // Skip only if already seen this version in this tab session
+  if (import.meta.client && sessionStorage.getItem(PRELOADER_KEY) === '1') {
     phase.value = 'done'
     return
   }
 
+  // 1) KETIK per huruf
   phase.value = 'typing'
   typedLen.value = 0
   typingDone.value = false
   for (let i = 1; i <= TYPE_TEXT.length; i++) {
     typedLen.value = i
-    await sleep(TYPE_TEXT[i - 1] === ' ' ? 90 : 52)
+    await sleep(TYPE_TEXT[i - 1] === ' ' ? 100 : 58)
   }
   typingDone.value = true
-  await sleep(480)
-  phase.value = 'exit-down'
-  await sleep(540)
-  phase.value = 'exit-up'
-  await sleep(580)
+
+  // 2) Hold sebentar biar kebaca
+  phase.value = 'hold'
+  await sleep(520)
+
+  // 3) Panel depan SLIDE ATAS → BAWAH
+  phase.value = 'down'
+  await sleep(620)
+
+  // 4) Panel belakang SLIDE BAWAH → ATAS (buka web)
+  phase.value = 'up'
+  await sleep(620)
+
   phase.value = 'done'
-  if (import.meta.client) sessionStorage.setItem('jetis-preloader', '1')
+  if (import.meta.client) sessionStorage.setItem(PRELOADER_KEY, '1')
 }
 
-/** Sparse ambient particles — haviq-style canvas */
 function startAtmosphere() {
   if (!import.meta.client) return
   const canvas = canvasEl.value

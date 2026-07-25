@@ -421,49 +421,46 @@ table.data tbody tr:hover td {
   transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* —— Preloader: cinematic dual curtain + noise + typewriter (haviq-like) —— */
+/* —— Preloader v3 ——
+   1) typing  (front + back full cover)
+   2) down    front slides TOP → BOTTOM
+   3) up      back slides BOTTOM → TOP (reveal site)
+*/
 .preloader {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
   pointer-events: all;
   overflow: hidden;
 }
 
-.preloader.is-done {
-  pointer-events: none;
-  visibility: hidden;
-}
-
-.preloader-scrim {
+.preloader-back,
+.preloader-front {
   position: absolute;
   inset: 0;
-  background: #050807;
-  z-index: 0;
-  opacity: 1;
-  transition: opacity 0.4s ease;
-}
-.preloader.is-exit-up .preloader-scrim,
-.preloader.is-done .preloader-scrim {
-  opacity: 0;
+  will-change: transform;
 }
 
-.preloader-curtain {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background:
-    radial-gradient(900px 320px at 50% 100%, rgba(63, 157, 108, 0.18), transparent 65%),
-    linear-gradient(180deg, #050807 0%, #0a1210 100%);
-  transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
-  will-change: transform;
+/* Layer belakang — sedikit lebih gelap */
+.preloader-back {
   z-index: 1;
-  overflow: hidden;
+  background:
+    radial-gradient(900px 500px at 50% 40%, rgba(63, 157, 108, 0.16), transparent 60%),
+    #030605;
+  transform: translateY(0);
+}
+
+/* Layer depan — typewriter */
+.preloader-front {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(700px 380px at 50% 45%, rgba(63, 157, 108, 0.14), transparent 65%),
+    linear-gradient(180deg, #070c0a 0%, #0a1210 100%);
+  transform: translateY(0);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .preloader-noise {
@@ -476,85 +473,47 @@ table.data tbody tr:hover td {
   pointer-events: none;
 }
 
-.preloader-curtain--top {
-  top: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  transform: translateY(0);
-}
-
-.preloader-curtain--bottom {
-  bottom: 0;
-  border-top: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  transform: translateY(0);
-  background:
-    radial-gradient(900px 320px at 50% 0%, rgba(63, 157, 108, 0.16), transparent 65%),
-    linear-gradient(0deg, #050807 0%, #0a1210 100%);
-}
-
 .preloader-orb {
   position: absolute;
+  left: 50%;
+  top: 42%;
   width: min(420px, 70vw);
   height: min(420px, 70vw);
+  transform: translate(-50%, -50%);
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(63, 157, 108, 0.22) 0%, transparent 68%);
-  filter: blur(40px);
-  z-index: 1;
+  background: radial-gradient(circle, rgba(63, 157, 108, 0.28) 0%, transparent 68%);
+  filter: blur(42px);
   animation: preloader-orb 3.2s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
 @keyframes preloader-orb {
-  from {
-    transform: scale(0.92);
-    opacity: 0.7;
-  }
-  to {
-    transform: scale(1.08);
-    opacity: 1;
-  }
+  from { opacity: 0.65; }
+  to { opacity: 1; }
 }
 
-/* Slide curtains: top→bottom meet, then reverse open */
-.preloader.is-exit-down .preloader-curtain--top {
-  transform: translateY(0);
-  animation: curtain-top-down 0.52s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+/* STEP 2: front panel slide ATAS → BAWAH */
+.preloader.is-down .preloader-front {
+  animation: pre-front-down 0.6s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
-.preloader.is-exit-down .preloader-curtain--bottom {
-  animation: curtain-bottom-up 0.52s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+.preloader.is-up .preloader-front,
+.preloader.is-done .preloader-front {
+  transform: translateY(105%);
 }
 
-@keyframes curtain-top-down {
+@keyframes pre-front-down {
   0% { transform: translateY(0); }
-  100% { transform: translateY(100%); }
-}
-@keyframes curtain-bottom-up {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
-}
-
-.preloader.is-exit-up .preloader-curtain--top {
-  animation: curtain-top-exit 0.55s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-}
-.preloader.is-exit-up .preloader-curtain--bottom {
-  animation: curtain-bottom-exit 0.55s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-}
-
-@keyframes curtain-top-exit {
-  0% { transform: translateY(100%); }
-  45% { transform: translateY(0); }
-  100% { transform: translateY(-105%); }
-}
-@keyframes curtain-bottom-exit {
-  0% { transform: translateY(-100%); }
-  45% { transform: translateY(0); }
   100% { transform: translateY(105%); }
 }
 
-.preloader.is-done .preloader-curtain--top {
-  transform: translateY(-105%);
+/* STEP 3: back panel slide BAWAH → ATAS (keluar ke atas) */
+.preloader.is-up .preloader-back {
+  animation: pre-back-up 0.6s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
-.preloader.is-done .preloader-curtain--bottom {
-  transform: translateY(105%);
+
+@keyframes pre-back-up {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-105%); }
 }
 
 .preloader-center {
@@ -562,16 +521,6 @@ table.data tbody tr:hover td {
   z-index: 3;
   text-align: center;
   padding: 1.5rem;
-  transition:
-    opacity 0.28s ease,
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.preloader.is-exit-down .preloader-center,
-.preloader.is-exit-up .preloader-center,
-.preloader.is-done .preloader-center {
-  opacity: 0;
-  transform: translateY(10px) scale(0.96);
 }
 
 .preloader-mark {
@@ -644,13 +593,9 @@ table.data tbody tr:hover td {
 
 @keyframes caret-blink {
   0%,
-  45% {
-    opacity: 1;
-  }
+  45% { opacity: 1; }
   50%,
-  100% {
-    opacity: 0;
-  }
+  100% { opacity: 0; }
 }
 
 .preloader-sub {
@@ -680,11 +625,17 @@ table.data tbody tr:hover td {
   background: linear-gradient(90deg, transparent, var(--accent), var(--accent-bright, #5ecf8f));
 }
 .preloader-bar.run > i {
-  animation: preloader-progress 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: preloader-progress 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes preloader-progress {
   0% { width: 0%; }
   100% { width: 100%; }
+}
+
+/* Saat slide down, teks ikut turun (sudah di front panel) — soft fade di hold→down */
+.preloader.is-down .preloader-center,
+.preloader.is-up .preloader-center {
+  opacity: 0.15;
 }
 
 @keyframes pulse {
@@ -776,7 +727,8 @@ table.data tbody tr:hover td {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .preloader-curtain,
+  .preloader-front,
+  .preloader-back,
   .preloader-center,
   .preloader-orb,
   .preloader-bar > i,
@@ -791,9 +743,8 @@ table.data tbody tr:hover td {
     animation: none !important;
     transition: none !important;
   }
-  .preloader.is-done,
   .preloader {
-    display: none;
+    display: none !important;
   }
   .atm {
     display: none;
