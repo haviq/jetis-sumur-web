@@ -10,3 +10,13 @@ service-account*.json
 google-credentials*.json
 *.tsbuildinfo
 .next
+
+.secrets/
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!vercel.json
+!docs/**/*.json
+!content/**/*.json
+*-sa.json
