@@ -421,10 +421,9 @@ table.data tbody tr:hover td {
   transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* —— Preloader v3 ——
-   1) typing  (front + back full cover)
-   2) down    front slides TOP → BOTTOM
-   3) up      back slides BOTTOM → TOP (reveal site)
+/* —— Preloader v4: 1 slide saja ——
+   typing → hold → slide (atas→bawah → balik bawah→atas)
+   tanpa loading bar, tanpa dual panel
 */
 .preloader {
   position: fixed;
@@ -434,33 +433,17 @@ table.data tbody tr:hover td {
   overflow: hidden;
 }
 
-.preloader-back,
-.preloader-front {
+.preloader-slide {
   position: absolute;
   inset: 0;
-  will-change: transform;
-}
-
-/* Layer belakang — sedikit lebih gelap */
-.preloader-back {
-  z-index: 1;
-  background:
-    radial-gradient(900px 500px at 50% 40%, rgba(63, 157, 108, 0.16), transparent 60%),
-    #030605;
-  transform: translateY(0);
-}
-
-/* Layer depan — typewriter */
-.preloader-front {
-  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  will-change: transform;
   background:
-    radial-gradient(700px 380px at 50% 45%, rgba(63, 157, 108, 0.14), transparent 65%),
+    radial-gradient(700px 380px at 50% 45%, rgba(63, 157, 108, 0.16), transparent 65%),
     linear-gradient(180deg, #070c0a 0%, #0a1210 100%);
   transform: translateY(0);
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .preloader-noise {
@@ -492,28 +475,28 @@ table.data tbody tr:hover td {
   to { opacity: 1; }
 }
 
-/* STEP 2: front panel slide ATAS → BAWAH */
-.preloader.is-down .preloader-front {
-  animation: pre-front-down 0.6s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-}
-.preloader.is-up .preloader-front,
-.preloader.is-done .preloader-front {
-  transform: translateY(105%);
+/* Satu slide: turun dulu, lalu naik keluar ke atas */
+.preloader.is-slide .preloader-slide {
+  animation: pre-one-slide 1.1s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
-@keyframes pre-front-down {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(105%); }
-}
-
-/* STEP 3: back panel slide BAWAH → ATAS (keluar ke atas) */
-.preloader.is-up .preloader-back {
-  animation: pre-back-up 0.6s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-}
-
-@keyframes pre-back-up {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-105%); }
+@keyframes pre-one-slide {
+  /* start full cover */
+  0% {
+    transform: translateY(0);
+  }
+  /* slide atas → bawah (keluar ke bawah) */
+  45% {
+    transform: translateY(105%);
+  }
+  /* instant jump ke bawah layar (siap naik) */
+  46% {
+    transform: translateY(105%);
+  }
+  /* slide balik bawah → atas (keluar ke atas, buka web) */
+  100% {
+    transform: translateY(-105%);
+  }
 }
 
 .preloader-center {
@@ -521,6 +504,11 @@ table.data tbody tr:hover td {
   z-index: 3;
   text-align: center;
   padding: 1.5rem;
+}
+
+.preloader.is-slide .preloader-center {
+  opacity: 0.2;
+  transition: opacity 0.2s ease;
 }
 
 .preloader-mark {
@@ -606,36 +594,6 @@ table.data tbody tr:hover td {
   color: color-mix(in srgb, var(--muted) 85%, #fff);
   opacity: 0;
   animation: fade-up 0.45s ease 0.35s forwards;
-}
-
-.preloader-bar {
-  width: min(220px, 55vw);
-  height: 2px;
-  margin: 1.35rem auto 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-  opacity: 0.9;
-}
-.preloader-bar > i {
-  display: block;
-  height: 100%;
-  width: 0%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-bright, #5ecf8f));
-}
-.preloader-bar.run > i {
-  animation: preloader-progress 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-@keyframes preloader-progress {
-  0% { width: 0%; }
-  100% { width: 100%; }
-}
-
-/* Saat slide down, teks ikut turun (sudah di front panel) — soft fade di hold→down */
-.preloader.is-down .preloader-center,
-.preloader.is-up .preloader-center {
-  opacity: 0.15;
 }
 
 @keyframes pulse {
@@ -727,11 +685,9 @@ table.data tbody tr:hover td {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .preloader-front,
-  .preloader-back,
+  .preloader-slide,
   .preloader-center,
   .preloader-orb,
-  .preloader-bar > i,
   .page-enter-active,
   .page-leave-active,
   .reveal,

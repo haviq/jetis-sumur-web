@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col relative">
-    <!-- Global cinematic atmosphere (haviq.dev-style) -->
+    <!-- Global cinematic atmosphere -->
     <div class="atm" aria-hidden="true">
       <canvas ref="canvasEl" class="atm-canvas" />
       <div class="atm-noise" />
@@ -10,11 +10,11 @@
     </div>
 
     <!--
-      Preloader sequence (exact):
-      1) typing  — ketik PADUKUHAN JETIS SUMUR
-      2) down    — panel depan slide ATAS → BAWAH
-      3) up      — panel belakang slide BAWAH → ATAS (buka web)
-      4) done
+      Preloader = 1 slide saja:
+      1) typing
+      2) slide atas → bawah
+      3) slide balik bawah → atas (keluar, buka web)
+      Tanpa loading bar.
     -->
     <div
       v-if="phase !== 'done'"
@@ -22,15 +22,9 @@
       :class="`is-${phase}`"
       aria-hidden="true"
     >
-      <!-- Layer belakang: exit naik (bawah → atas off-screen) -->
-      <div class="preloader-back">
+      <div class="preloader-slide">
         <div class="preloader-noise" />
         <div class="preloader-orb" />
-      </div>
-
-      <!-- Layer depan: typewriter + exit turun (atas → bawah) -->
-      <div class="preloader-front">
-        <div class="preloader-noise" />
         <div class="preloader-center">
           <div class="preloader-mark">JS</div>
           <div class="preloader-type" aria-label="Padukuhan Jetis Sumur">
@@ -43,9 +37,6 @@
             <span class="preloader-caret" :class="{ blink: typingDone }" />
           </div>
           <div class="preloader-sub">Pendataan Warga</div>
-          <div class="preloader-bar" :class="{ run: phase === 'typing' || phase === 'hold' }">
-            <i />
-          </div>
         </div>
       </div>
     </div>
@@ -134,17 +125,14 @@ const open = ref(false)
 const theme = ref<'dark' | 'light'>('dark')
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
-/**
- * Sequence:
- * idle → typing → hold → down (front slides top→bottom) → up (back slides bottom→top) → done
- */
-const phase = ref<'idle' | 'typing' | 'hold' | 'down' | 'up' | 'done'>('idle')
+/** idle → typing → hold → slide (1 panel: down then up) → done */
+const phase = ref<'idle' | 'typing' | 'hold' | 'slide' | 'done'>('idle')
 const TYPE_TEXT = 'PADUKUHAN JETIS SUMUR'
 const typedLen = ref(0)
 const typingDone = ref(false)
 const typedChars = computed(() => TYPE_TEXT.slice(0, typedLen.value).split(''))
 
-const PRELOADER_KEY = 'jetis-preloader-v3'
+const PRELOADER_KEY = 'jetis-preloader-v4'
 
 const links = [
   { to: '/', label: 'Beranda' },
@@ -177,14 +165,12 @@ async function runPreloader() {
     phase.value = 'done'
     return
   }
-
-  // Skip only if already seen this version in this tab session
   if (import.meta.client && sessionStorage.getItem(PRELOADER_KEY) === '1') {
     phase.value = 'done'
     return
   }
 
-  // 1) KETIK per huruf
+  // 1) Ketik
   phase.value = 'typing'
   typedLen.value = 0
   typingDone.value = false
@@ -194,17 +180,13 @@ async function runPreloader() {
   }
   typingDone.value = true
 
-  // 2) Hold sebentar biar kebaca
+  // 2) Hold
   phase.value = 'hold'
-  await sleep(520)
+  await sleep(420)
 
-  // 3) Panel depan SLIDE ATAS → BAWAH
-  phase.value = 'down'
-  await sleep(620)
-
-  // 4) Panel belakang SLIDE BAWAH → ATAS (buka web)
-  phase.value = 'up'
-  await sleep(620)
+  // 3) 1 slide: atas→bawah lalu balik bawah→atas (CSS keyframes ~1.1s)
+  phase.value = 'slide'
+  await sleep(1120)
 
   phase.value = 'done'
   if (import.meta.client) sessionStorage.setItem(PRELOADER_KEY, '1')
@@ -214,8 +196,7 @@ function startAtmosphere() {
   if (!import.meta.client) return
   const canvas = canvasEl.value
   if (!canvas) return
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (reduce) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -273,13 +254,11 @@ function startAtmosphere() {
   resize()
   seed()
   frame()
-
   const onResize = () => {
     resize()
     seed()
   }
   window.addEventListener('resize', onResize)
-
   onBeforeUnmount(() => {
     cancelAnimationFrame(raf)
     window.removeEventListener('resize', onResize)
