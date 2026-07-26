@@ -84,7 +84,9 @@ const tabs = computed(() => {
     { to: '/ops/mutasi', label: 'Mutasi' },
     { to: '/ops/surat', label: 'Surat' },
     { to: '/ops/portal', label: 'Portal' },
+    { to: '/ops/agenda', label: 'Agenda' },
     { to: '/ops/peta', label: 'Peta' },
+    { to: '/ops/dashboard-rt', label: 'Dashboard RT' },
     { to: '/ops/laporan', label: 'Laporan' },
   ]
   if (auth.isAdmin) {
@@ -93,6 +95,7 @@ const tabs = computed(() => {
       { to: '/ops/backup', label: 'Backup' },
       { to: '/ops/master', label: 'Master' },
       { to: '/ops/log', label: 'Audit' },
+      { to: '/ops/notifikasi', label: 'Notif' },
     )
   }
   if (auth.isSuper) {

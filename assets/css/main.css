@@ -722,7 +722,7 @@ table.data tbody tr:hover td {
   position: fixed;
   inset: 0;
   z-index: 100;
-  pointer-events: all;
+  pointer-events: none;
 }
 
 /* Kedua panel: isi penuh */
@@ -749,7 +749,7 @@ table.data tbody tr:hover td {
   background: color-mix(in srgb, var(--accent) 12%, #070c0a);
 }
 
-/* EXIT phase: is-slide → kedua panel naik ke atas */
+/* EXIT phase: is-slide → kedua panel naik ke atas, non-interaktif */
 .pre-wrap.is-slide .pre-panel--a {
   animation: pre-exit-a 0.78s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
@@ -782,6 +782,7 @@ table.data tbody tr:hover td {
 }
 .route-curtain.is-active {
   animation: curtain-wipe 0.5s cubic-bezier(0.76, 0, 0.24, 1) both;
+  pointer-events: none;
 }
 @keyframes curtain-wipe {
   0%   { transform: translateY(-100%); }
@@ -794,6 +795,12 @@ table.data tbody tr:hover td {
 .hero-section {
   border-bottom: 1px solid var(--border);
   background: radial-gradient(ellipse 80% 55% at 50% -5%, rgba(63, 157, 108, 0.12), transparent 62%);
+  min-height: auto;
+}
+@media (min-width: 640px) {
+  .hero-section {
+    min-height: 420px;
+  }
 }
 
 /* Hero decorative vertical lines */

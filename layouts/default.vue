@@ -54,7 +54,7 @@
     />
 
     <header
-      class="sticky top-0 z-40 border-b header-motion"
+      class="sticky top-0 z-[120] border-b header-motion"
       style="background: color-mix(in srgb, var(--bg) 82%, transparent); border-color: var(--border); backdrop-filter: blur(14px)"
     >
       <div class="container-page flex h-14 items-center justify-between gap-3">
@@ -75,7 +75,7 @@
 
         <div class="flex items-center gap-2">
           <button
-            class="btn btn-ghost px-2.5 py-1.5 text-sm"
+            class="btn btn-ghost px-2.5 py-1.5 text-sm relative z-[130]"
             type="button"
             :aria-label="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
             @click="toggleTheme"
@@ -83,11 +83,11 @@
             <span aria-hidden="true">{{ theme === 'dark' ? '☀' : '☾' }}</span>
           </button>
           <button
-            class="md:hidden btn btn-ghost px-2.5 py-1.5"
+            class="md:hidden btn btn-ghost px-2.5 py-1.5 relative z-[130]"
             type="button"
             :aria-label="open ? 'Tutup menu' : 'Buka menu'"
             :aria-expanded="open"
-            @click="open = !open"
+            @click="toggleMenu"
           >
             <span aria-hidden="true">{{ open ? '✕' : '☰' }}</span>
           </button>
@@ -97,7 +97,7 @@
       <Transition name="menu">
         <div
           v-if="open"
-          class="md:hidden border-t px-4 py-3 space-y-1"
+          class="md:hidden border-t px-4 py-3 space-y-1 relative z-[125]"
           style="border-color: var(--border); background: var(--surface)"
         >
           <NuxtLink
@@ -137,6 +137,7 @@
 <script setup lang="ts">
 const site = useSite()
 const open = ref(false)
+const lastToggle = ref(0)
 const theme = ref<'dark' | 'light'>('dark')
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
@@ -173,6 +174,13 @@ function applyTheme(t: 'dark' | 'light') {
 
 function toggleTheme() {
   applyTheme(theme.value === 'dark' ? 'light' : 'dark')
+}
+
+function toggleMenu() {
+  const now = Date.now()
+  if (now - lastToggle.value < 350) return
+  lastToggle.value = now
+  open.value = !open.value
 }
 
 function sleep(ms: number) {
