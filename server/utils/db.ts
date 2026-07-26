@@ -202,16 +202,25 @@ export function addLog(user: string, aktivitas: string, ip?: string) {
   markDirty()
 }
 
-/** Scope helper — filter by operator RT */
+/** Scope helper — filter by operator RT. null = semua RT. */
 export function scopeRts(actor?: SessionUser | null): string[] | null {
-  if (!actor?.rtScope?.length) return null
+  if (!actor) return null
+  // admin/super selalu full access
   if (actor.role === 'super_admin' || actor.role === 'admin') return null
-  return actor.rtScope
+  const raw = actor.rtScope
+  if (!raw?.length) return null
+  // normalisasi "1" → "01"
+  return raw.map((r) => String(r).trim().padStart(2, '0')).filter(Boolean)
 }
 
-function inRtScope(rt: string, scope: string[] | null): boolean {
-  if (!scope) return true
-  return scope.includes(rt)
+function inRtScope(rt: string, scope: string[] | null | undefined): boolean {
+  if (!scope || !scope.length) return true
+  const n = String(rt || '').trim().padStart(2, '0')
+  return scope.some((s) => String(s).trim().padStart(2, '0') === n)
+}
+
+function hasScope(scope?: string[] | null): scope is string[] {
+  return Array.isArray(scope) && scope.length > 0
 }
 
 export async function findAkunByUsername(username: string): Promise<Akun | null> {
@@ -258,19 +267,21 @@ export async function upsertAkun(input: Omit<Akun, 'id'> & { id?: string }): Pro
 
 export function listKeluarga(opts?: { q?: string; rt?: string; scope?: string[] | null }): Keluarga[] {
   let rows = Array.from(store().keluarga.values())
-  const scope = opts?.scope ?? null
-  if (scope) rows = rows.filter((r) => inRtScope(r.rt, scope))
-  if (opts?.rt) rows = rows.filter((r) => r.rt === opts.rt)
+  if (hasScope(opts?.scope)) rows = rows.filter((r) => inRtScope(r.rt, opts!.scope!))
+  if (opts?.rt) {
+    const rt = String(opts.rt).trim().padStart(2, '0')
+    rows = rows.filter((r) => String(r.rt || '').trim().padStart(2, '0') === rt)
+  }
   if (opts?.q) {
     const q = opts.q.toLowerCase().trim()
-    rows = rows.filter(
-      (r) =>
-        r.kepalaKeluarga.toLowerCase().includes(q) ||
-        r.nomorKk.includes(q) ||
-        r.alamat.toLowerCase().includes(q),
-    )
+    rows = rows.filter((r) => {
+      const nama = String(r.kepalaKeluarga || '').toLowerCase()
+      const kk = String(r.nomorKk || '')
+      const alamat = String(r.alamat || '').toLowerCase()
+      return nama.includes(q) || kk.includes(q) || alamat.includes(q)
+    })
   }
-  return rows.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  return rows.sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
 }
 
 export function getKeluargaByNomor(nomorKk: string): Keluarga | null {
@@ -336,25 +347,35 @@ export function listWarga(opts?: {
   if (!opts?.includeDeleted) rows = rows.filter((r) => r.status !== 'deleted')
   if (opts?.status) rows = rows.filter((r) => r.status === opts.status)
   if (opts?.nomorKk) rows = rows.filter((r) => r.nomorKk === opts.nomorKk)
-  if (opts?.rt || opts?.scope) {
+  if (opts?.rt || hasScope(opts?.scope)) {
+    const rtWant = opts?.rt ? String(opts.rt).trim().padStart(2, '0') : null
     const nks = new Set(
       Array.from(store().keluarga.values())
         .filter((k) => {
-          if (opts?.rt && k.rt !== opts.rt) return false
-          if (opts?.scope && !inRtScope(k.rt, opts.scope)) return false
+          if (rtWant && String(k.rt || '').trim().padStart(2, '0') !== rtWant) return false
+          if (hasScope(opts?.scope) && !inRtScope(k.rt, opts!.scope!)) return false
           return true
         })
         .map((k) => k.nomorKk),
     )
-    if (opts?.rt || opts?.scope) rows = rows.filter((r) => nks.has(r.nomorKk))
+    // Jika filter RT/scope tapi tidak ada KK yang cocok, hasil kosong (benar).
+    // Warga tanpa nomorKk tetap lolos filter q di bawah jika tidak ada scope.
+    rows = rows.filter((r) => nks.has(r.nomorKk))
   }
   if (opts?.q) {
     const q = opts.q.toLowerCase().trim()
-    rows = rows.filter(
-      (r) => r.nama.toLowerCase().includes(q) || r.nik.includes(q) || r.nomorKk.includes(q),
-    )
+    const qDigits = q.replace(/\D/g, '')
+    rows = rows.filter((r) => {
+      const nama = String(r.nama || '').toLowerCase()
+      const nik = String(r.nik || '')
+      const kk = String(r.nomorKk || '')
+      if (nama.includes(q) || nik.includes(q) || kk.includes(q)) return true
+      // partial digit match (NIK / KK)
+      if (qDigits.length >= 2 && (nik.includes(qDigits) || kk.includes(qDigits))) return true
+      return false
+    })
   }
-  return rows.sort((a, b) => a.nama.localeCompare(b.nama))
+  return rows.sort((a, b) => String(a.nama || '').localeCompare(String(b.nama || ''), 'id'))
 }
 
 export function findWargaByNik(nik: string): Warga | null {
@@ -503,19 +524,44 @@ export function getKk360(nomorKk: string): Kk360 | null {
 
 /* ─── Global search ─── */
 export function globalSearch(q: string, scope?: string[] | null, limit = 20) {
-  const query = q.trim().toLowerCase()
-  if (query.length < 2) return { warga: [] as Warga[], kk: [] as Keluarga[], mutasi: [] as Mutasi[] }
-  const warga = listWarga({ q: query, scope }).slice(0, limit)
-  const kk = listKeluarga({ q: query, scope }).slice(0, limit)
+  const raw = String(q || '').trim()
+  const query = raw.toLowerCase()
+  // min 1 char (digit NIK) atau 2 char teks — biar partial NIK tetap jalan
+  const isDigitHeavy = /^\d[\d\s.-]*$/.test(raw)
+  if (!query || (!isDigitHeavy && query.length < 2) || (isDigitHeavy && query.replace(/\D/g, '').length < 2)) {
+    return {
+      warga: [] as Warga[],
+      kk: [] as Keluarga[],
+      mutasi: [] as Mutasi[],
+      totalIndexed: {
+        warga: listWarga({ scope }).length,
+        kk: listKeluarga({ scope }).length,
+        mutasi: listMutasi().length,
+      },
+      minQuery: true,
+    }
+  }
+  const sc = hasScope(scope) ? scope : null
+  const warga = listWarga({ q: query, scope: sc }).slice(0, limit)
+  const kk = listKeluarga({ q: query, scope: sc }).slice(0, limit)
   const mutasi = listMutasi()
-    .filter(
-      (m) =>
-        m.nik.includes(query) ||
-        (m.nama || '').toLowerCase().includes(query) ||
-        String(m.jenis).includes(query),
-    )
+    .filter((m) => {
+      const nik = String(m.nik || '')
+      const nama = String(m.nama || '').toLowerCase()
+      const jenis = String(m.jenis || '').toLowerCase()
+      return nik.includes(query) || nama.includes(query) || jenis.includes(query)
+    })
     .slice(0, Math.min(10, limit))
-  return { warga, kk, mutasi }
+  return {
+    warga,
+    kk,
+    mutasi,
+    totalIndexed: {
+      warga: listWarga({ scope: sc }).length,
+      kk: listKeluarga({ scope: sc }).length,
+      mutasi: listMutasi().length,
+    },
+  }
 }
 
 /* ─── Bulk actions ─── */

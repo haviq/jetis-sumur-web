@@ -6,18 +6,13 @@ export default defineEventHandler(async (event) => {
   await ensureHydrated()
   const q = getQuery(event)
   const scope = scopeRts(user)
-  let items = listWarga({
+  const items = listWarga({
     q: q.q ? String(q.q) : undefined,
     status: q.status ? (String(q.status) as any) : undefined,
     nomorKk: q.nomorKk ? String(q.nomorKk) : undefined,
     rt: q.rt ? String(q.rt) : undefined,
     includeDeleted: q.includeDeleted === '1',
+    scope,
   })
-  if (scope) {
-    const allowedKk = new Set(
-      listKeluarga().filter((k) => scope.includes(k.rt)).map((k) => k.nomorKk),
-    )
-    items = items.filter((w) => allowedKk.has(w.nomorKk))
-  }
   return { ok: true, items, rtScope: scope || null }
 })
