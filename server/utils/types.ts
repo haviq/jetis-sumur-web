@@ -237,3 +237,17 @@ export const ROLE_LABEL: Record<Role, string> = {
   admin: 'Admin',
   padukuhan: 'Padukuhan',
 }
+
+export type AgendaStatus = 'aktif' | 'selesai' | 'batal'
+
+export interface Agenda {
+  id: string
+  judul: string
+  deskripsi?: string
+  tanggal: string      // ISO date YYYY-MM-DD
+  waktu?: string       // HH:mm
+  lokasi?: string
+  status: AgendaStatus
+  createdBy?: string
+  createdAt: string
+}

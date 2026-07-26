@@ -1,31 +1,29 @@
-/* Minimal offline shell — network-first for API, cache-first for static */
-const CACHE = 'jetis-shell-v1'
-const SHELL = ['/', '/manifest.webmanifest', '/icon.svg']
+// Service Worker — Web Push handler for Jetis Sumur
+// Registered by pages/ops/notifikasi.vue via navigator.serviceWorker.register('/sw.js')
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()))
-})
-
-self.addEventListener('activate', (event) => {
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() || {}
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
-    ).then(() => self.clients.claim()),
+    self.registration.showNotification(data.title || 'Jetis Sumur', {
+      body: data.body || '',
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      data: { url: data.url || '/ops' },
+    })
   )
 })
 
-self.addEventListener('fetch', (event) => {
-  const req = event.request
-  if (req.method !== 'GET') return
-  const url = new URL(req.url)
-  if (url.pathname.startsWith('/api/')) return
-  event.respondWith(
-    fetch(req)
-      .then((res) => {
-        const copy = res.clone()
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {})
-        return res
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  event.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((list) => {
+        const target = event.notification.data?.url || '/ops'
+        for (const c of list) {
+          if (c.url === target && 'focus' in c) return c.focus()
+        }
+        if (clients.openWindow) return clients.openWindow(target)
       })
-      .catch(() => caches.match(req).then((r) => r || caches.match('/'))),
   )
 })

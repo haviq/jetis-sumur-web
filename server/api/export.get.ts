@@ -7,6 +7,12 @@ export default defineEventHandler(async (event) => {
   const q = getQuery(event)
   const type = String(q.type || 'warga')
 
+  // type=excel → forward to the Excel-compatible CSV endpoint (BOM + semicolon)
+  if (type === 'excel') {
+    const subType = q.subtype ? String(q.subtype) : 'warga'
+    return sendRedirect(event, `/api/export-excel?type=${subType}`, 302)
+  }
+
   if (type === 'kk') {
     const rows = listKeluarga()
     const csv = toCsv(

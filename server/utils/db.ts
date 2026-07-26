@@ -13,6 +13,8 @@ import {
 } from './seed'
 import type {
   AdminStats,
+  Agenda,
+  AgendaStatus,
   Akun,
   Berita,
   Keluarga,
@@ -44,6 +46,7 @@ type Store = {
   berita: Map<string, Berita>
   surat: Map<string, SuratArsip>
   portal: Map<string, PortalPengajuan>
+  agenda: Map<string, Agenda>
   hydrated: boolean
   hydrating?: Promise<void>
   dirty: boolean
@@ -63,6 +66,7 @@ function store(): Store {
       berita: new Map(),
       surat: new Map(),
       portal: new Map(),
+      agenda: new Map(),
       hydrated: false,
       dirty: false,
     }
@@ -498,6 +502,53 @@ export function listBerita(publishedOnly = true): Berita[] {
   let rows = Array.from(store().berita.values())
   if (publishedOnly) rows = rows.filter((b) => b.published)
   return rows.sort((a, b) => b.tanggal.localeCompare(a.tanggal))
+}
+
+/* ─── Agenda ─── */
+
+export function listAgenda(status?: AgendaStatus): Agenda[] {
+  let rows = Array.from(store().agenda.values())
+  if (status) rows = rows.filter((a) => a.status === status)
+  return rows.sort((a, b) => b.tanggal.localeCompare(a.tanggal))
+}
+
+export async function createAgenda(data: {
+  judul: string
+  deskripsi?: string
+  tanggal: string
+  waktu?: string
+  lokasi?: string
+  status?: AgendaStatus
+  createdBy?: string
+}): Promise<Agenda> {
+  await ensureHydrated()
+  const row: Agenda = {
+    id: uid('agd'),
+    judul: data.judul,
+    deskripsi: data.deskripsi,
+    tanggal: data.tanggal,
+    waktu: data.waktu,
+    lokasi: data.lokasi,
+    status: data.status ?? 'aktif',
+    createdBy: data.createdBy,
+    createdAt: new Date().toISOString(),
+  }
+  store().agenda.set(row.id, row)
+  markDirty()
+  return row
+}
+
+export async function updateAgendaStatus(
+  id: string,
+  status: AgendaStatus,
+): Promise<Agenda | null> {
+  await ensureHydrated()
+  const row = store().agenda.get(id)
+  if (!row) return null
+  row.status = status
+  store().agenda.set(id, row)
+  markDirty()
+  return row
 }
 
 /* ─── KK 360° ─── */

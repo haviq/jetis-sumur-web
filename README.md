@@ -479,12 +479,12 @@ Border  : rgba(63, 157, 108, 0.18)
 - [x] Cinematic preloader + page transitions
 - [x] PWA manifest
 - [x] Multi-tenant foundation
-- [ ] WhatsApp notifikasi pengurus
-- [ ] Peta interaktif sebaran warga (Leaflet)
-- [ ] Dashboard RT — akses terbatas per RT
-- [ ] Agenda dan pengumuman terjadwal
-- [ ] Export laporan ke Word/Excel
-- [ ] Notifikasi push (web push API)
+- [x] WhatsApp notifikasi pengurus (wa.me deeplink, tanpa paid API)
+- [x] Peta interaktif sebaran warga (Leaflet via CDN + centroid fallback per RT)
+- [x] Dashboard RT — akses terbatas per RT (rtScope ACL di session JWT)
+- [x] Agenda dan pengumuman terjadwal (CRUD + filter status + modal form)
+- [x] Export laporan ke Excel/CSV (BOM + semicolon separator, semua tipe data)
+- [x] Notifikasi push (Web Push API + VAPID + Service Worker, tanpa library eksternal)
 - [ ] Multi-padukuhan / white-label
 
 ---
