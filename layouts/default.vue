@@ -10,36 +10,47 @@
     </div>
 
     <!--
-      Preloader = 1 slide saja:
-      1) typing
-      2) slide atas → bawah
-      3) slide balik bawah → atas (keluar, buka web)
-      Tanpa loading bar.
+      Preloader full (pertama kali load):
+      1) typing PADUKUHAN JETIS SUMUR per huruf
+      2) hold sebentar
+      3) slide atas→bawah lalu balik bawah→atas (CSS keyframes)
+      Skip di /ops dan sesi yang sudah pernah lihat.
     -->
-    <div
-      v-if="phase !== 'done'"
-      class="preloader"
-      :class="`is-${phase}`"
-      aria-hidden="true"
-    >
-      <div class="preloader-slide">
-        <div class="preloader-noise" />
-        <div class="preloader-orb" />
-        <div class="preloader-center">
-          <div class="preloader-mark">JS</div>
-          <div class="preloader-type" aria-label="Padukuhan Jetis Sumur">
-            <span
-              v-for="(ch, i) in typedChars"
-              :key="`${i}-${ch}`"
-              class="preloader-char"
-              :class="{ space: ch === ' ' }"
-            >{{ ch === ' ' ? '\u00A0' : ch }}</span>
-            <span class="preloader-caret" :class="{ blink: typingDone }" />
+    <Transition name="preloader-fade">
+      <div
+        v-if="phase !== 'done'"
+        class="preloader"
+        :class="`is-${phase}`"
+        aria-hidden="true"
+        style="pointer-events: all"
+      >
+        <div class="preloader-slide">
+          <div class="preloader-noise" />
+          <div class="preloader-orb" />
+          <div class="preloader-center">
+            <div class="preloader-mark">JS</div>
+            <div class="preloader-type" aria-label="Padukuhan Jetis Sumur">
+              <span
+                v-for="(ch, i) in typedChars"
+                :key="`${i}-${ch}`"
+                class="preloader-char"
+                :class="{ space: ch === ' ' }"
+                :style="{ animationDelay: `${i * 0.015}s` }"
+              >{{ ch === ' ' ? '\u00A0' : ch }}</span>
+              <span class="preloader-caret" :class="{ blink: typingDone }" />
+            </div>
+            <div class="preloader-sub">Pendataan Warga · DI Yogyakarta</div>
           </div>
-          <div class="preloader-sub">Pendataan Warga</div>
         </div>
       </div>
-    </div>
+    </Transition>
+
+    <!-- Route curtain: mini slide per navigasi tab -->
+    <div
+      class="route-curtain"
+      :class="{ 'is-active': curtainActive }"
+      aria-hidden="true"
+    />
 
     <header
       class="sticky top-0 z-40 border-b header-motion"
@@ -65,17 +76,17 @@
           <button
             class="btn btn-ghost px-2.5 py-1.5 text-sm"
             type="button"
-            @click="toggleTheme"
             :aria-label="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
+            @click="toggleTheme"
           >
             <span aria-hidden="true">{{ theme === 'dark' ? '☀' : '☾' }}</span>
           </button>
           <button
             class="md:hidden btn btn-ghost px-2.5 py-1.5"
             type="button"
-            @click="open = !open"
             :aria-label="open ? 'Tutup menu' : 'Buka menu'"
             :aria-expanded="open"
+            @click="open = !open"
           >
             <span aria-hidden="true">{{ open ? '✕' : '☰' }}</span>
           </button>
@@ -128,12 +139,16 @@ const open = ref(false)
 const theme = ref<'dark' | 'light'>('dark')
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
-/** idle → typing → hold → slide (1 panel: down then up) → done */
-const phase = ref<'idle' | 'typing' | 'hold' | 'slide' | 'done'>('idle')
+/** idle → typing → hold → slide → done */
+const phase = ref<'idle' | 'typing' | 'hold' | 'slide' | 'done'>('done')
 const TYPE_TEXT = 'PADUKUHAN JETIS SUMUR'
 const typedLen = ref(0)
 const typingDone = ref(false)
 const typedChars = computed(() => TYPE_TEXT.slice(0, typedLen.value).split(''))
+
+/** Route curtain per-tab */
+const curtainActive = ref(false)
+let curtainTimer: ReturnType<typeof setTimeout> | null = null
 
 const PRELOADER_KEY = 'jetis-preloader-v4'
 
@@ -164,36 +179,48 @@ function sleep(ms: number) {
 }
 
 async function runPreloader() {
+  if (!import.meta.client) return
   const path = useRoute().path || ''
   if (path.startsWith('/ops')) {
     phase.value = 'done'
     return
   }
-  if (import.meta.client && sessionStorage.getItem(PRELOADER_KEY) === '1') {
+  if (sessionStorage.getItem(PRELOADER_KEY) === '1') {
     phase.value = 'done'
     return
   }
 
-  // 1) Ketik
+  // Mulai preloader
   phase.value = 'typing'
   typedLen.value = 0
   typingDone.value = false
+
+  // Ketik per huruf
   for (let i = 1; i <= TYPE_TEXT.length; i++) {
     typedLen.value = i
-    await sleep(TYPE_TEXT[i - 1] === ' ' ? 100 : 58)
+    await sleep(TYPE_TEXT[i - 1] === ' ' ? 90 : 52)
   }
   typingDone.value = true
 
-  // 2) Hold
+  // Hold
   phase.value = 'hold'
-  await sleep(420)
+  await sleep(480)
 
-  // 3) 1 slide: atas→bawah lalu balik bawah→atas (CSS keyframes ~1.1s)
+  // Slide: CSS keyframe ~1.1s
   phase.value = 'slide'
-  await sleep(1120)
+  await sleep(1150)
 
   phase.value = 'done'
-  if (import.meta.client) sessionStorage.setItem(PRELOADER_KEY, '1')
+  sessionStorage.setItem(PRELOADER_KEY, '1')
+}
+
+function triggerCurtain() {
+  if (!import.meta.client) return
+  if (curtainTimer) clearTimeout(curtainTimer)
+  curtainActive.value = true
+  curtainTimer = setTimeout(() => {
+    curtainActive.value = false
+  }, 520)
 }
 
 function startAtmosphere() {
@@ -208,41 +235,34 @@ function startAtmosphere() {
   let w = 0
   let h = 0
   let raf = 0
-  const dots: { x: number; y: number; r: number; vx: number; vy: number; a: number }[] = []
+  interface Dot { x: number; y: number; r: number; vx: number; vy: number; a: number }
+  let dots: Dot[] = []
 
   function resize() {
-    w = window.innerWidth
-    h = window.innerHeight
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    canvas!.width = w * dpr
-    canvas!.height = h * dpr
-    canvas!.style.width = `${w}px`
-    canvas!.style.height = `${h}px`
-    ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
+    w = canvas!.width = canvas!.offsetWidth
+    h = canvas!.height = canvas!.offsetHeight
   }
 
   function seed() {
-    dots.length = 0
-    const n = Math.min(48, Math.floor((w * h) / 28000))
-    for (let i = 0; i < n; i++) {
-      dots.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        r: 0.6 + Math.random() * 1.6,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: -0.05 - Math.random() * 0.22,
-        a: 0.15 + Math.random() * 0.35,
-      })
-    }
+    const n = Math.min(Math.floor((w * h) / 9000), 80)
+    dots = Array.from({ length: n }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.4 + 0.4,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      a: Math.random() * 0.55 + 0.12,
+    }))
   }
 
   function frame() {
     ctx!.clearRect(0, 0, w, h)
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+    const isLight = document.documentElement.hasAttribute('data-theme')
     for (const d of dots) {
       d.x += d.vx
       d.y += d.vy
       if (d.y < -8) d.y = h + 8
+      if (d.y > h + 8) d.y = -8
       if (d.x < -8) d.x = w + 8
       if (d.x > w + 8) d.x = -8
       ctx!.beginPath()
@@ -274,6 +294,14 @@ onMounted(() => {
   applyTheme(saved === 'light' ? 'light' : 'dark')
   startAtmosphere()
   runPreloader()
+})
+
+const router = useRouter()
+router.afterEach((_to, from) => {
+  // Trigger curtain hanya saat ganti halaman (bukan load pertama)
+  if (from.name !== undefined) {
+    triggerCurtain()
+  }
 })
 
 watch(

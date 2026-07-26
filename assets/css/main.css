@@ -741,7 +741,8 @@ table.data tbody tr:hover td {
   .bar > i,
   .hero-caret,
   .atm-glow,
-  .atm-canvas {
+  .atm-canvas,
+  .route-curtain {
     animation: none !important;
     transition: none !important;
   }
@@ -751,4 +752,254 @@ table.data tbody tr:hover td {
   .atm {
     display: none;
   }
+}
+
+/* ── Preloader: idle = hidden (cegah blank flash) ── */
+.preloader.is-idle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Preloader: done → fade out cepat ── */
+.preloader-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+.preloader-fade-leave-to {
+  opacity: 0;
+}
+
+/* ── Route curtain: mini wipe per-tab ── */
+.route-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg) 97%, var(--accent)) 0%,
+    var(--bg) 100%
+  );
+  transform: translateY(-100%);
+  will-change: transform;
+}
+.route-curtain.is-active {
+  animation: curtain-wipe 0.5s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+@keyframes curtain-wipe {
+  0%   { transform: translateY(-100%); }
+  40%  { transform: translateY(0%); }
+  41%  { transform: translateY(100%); }
+  100% { transform: translateY(-100%); }
+}
+
+/* ── Hero section ── */
+.hero-section {
+  border-bottom: 1px solid var(--border);
+  background: radial-gradient(ellipse 80% 55% at 50% -5%, rgba(63, 157, 108, 0.12), transparent 62%);
+}
+
+/* Hero decorative vertical lines */
+.hero-lines {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero-lines span {
+  position: absolute;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 16%, transparent) 45%,
+    transparent 100%
+  );
+}
+.hero-lines span:nth-child(1) { left: 20%; }
+.hero-lines span:nth-child(2) { left: 50%; opacity: 0.55; }
+.hero-lines span:nth-child(3) { left: 80%; }
+
+/* Hero badge */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 0.35rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: 999px;
+  background: var(--accent-dim);
+}
+.hero-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent-bright);
+  flex-shrink: 0;
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
+/* btn-lg */
+.btn-lg {
+  @apply px-5 py-3 text-[15px];
+}
+
+/* ── Stats card (hero kanan) ── */
+.stats-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow), 0 0 0 1px color-mix(in srgb, var(--accent) 7%, transparent) inset;
+  overflow: hidden;
+  transition: border-color 0.28s ease, box-shadow 0.28s ease;
+}
+.stats-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  box-shadow: var(--shadow), 0 0 28px rgba(63, 157, 108, 0.1);
+}
+.stats-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+.stats-card__icon { font-size: 1.05rem; }
+.badge--mode {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent-bright);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+}
+.stats-card__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.stat-cell {
+  padding: 1rem 1.25rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.stat-cell:nth-child(2n)   { border-right: none; }
+.stat-cell:nth-last-child(-n+2) { border-bottom: none; }
+.stat-cell--featured {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.stat-cell__label {
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.stat-cell__sub {
+  font-size: 0.68rem;
+  color: var(--muted2);
+  margin-top: 0.2rem;
+}
+.stats-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  background: color-mix(in srgb, var(--surface-soft) 45%, transparent);
+}
+.stats-card__link {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  transition: color 0.2s;
+}
+.stats-card__link:hover { color: var(--accent-bright); }
+
+/* ── Section header ── */
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.section-more {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.section-more:hover { color: var(--accent-bright); }
+
+/* ── RT row ── */
+.rt-row {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr 3rem;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.875rem;
+}
+.rt-row__label {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.rt-row__val {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Age card ── */
+.age-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease, box-shadow 0.28s ease;
+}
+.age-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+.age-card__label {
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ── Feature card ── */
+.feature-card__icon {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+/* ── Berita card ── */
+.berita-card {
+  border-left: 3px solid transparent;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease, box-shadow 0.28s ease;
+}
+.berita-card:hover {
+  transform: translateY(-3px);
+  border-left-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
