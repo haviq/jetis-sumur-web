@@ -549,23 +549,24 @@ table.data tbody tr:hover td {
   text-shadow: 0 0 40px rgba(63, 157, 108, 0.35);
 }
 
-/* Per-character animation */
+/* Per-character smooth stagger reveal (bukan ketikan, tapi wave reveal) */
 .pre-char {
   display: inline-block;
-  animation: char-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  opacity: 0;
+  animation: char-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 .pre-char.space {
   width: 0.45em;
 }
-@keyframes char-in {
+@keyframes char-reveal {
   from {
     opacity: 0;
-    transform: translateY(10px);
-    filter: blur(4px);
+    transform: translateY(14px) scaleY(0.85);
+    filter: blur(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scaleY(1);
     filter: blur(0);
   }
 }

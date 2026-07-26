@@ -35,6 +35,7 @@
               :key="`${i}-${ch}`"
               class="pre-char"
               :class="{ space: ch === ' ' }"
+              :style="{ animationDelay: `${i * 0.045}s` }"
             >{{ ch === ' ' ? '\u00A0' : ch }}</span>
             <span class="pre-caret" :class="{ blink: typingDone }" />
           </div>
@@ -195,14 +196,15 @@ async function runPreloader() {
   typedLen.value = 0
   typingDone.value = false
 
-  // Ketik per huruf
-  for (let i = 1; i <= TYPE_TEXT.length; i++) {
-    typedLen.value = i
-    await sleep(TYPE_TEXT[i - 1] === ' ' ? 90 : 52)
-  }
+  // Tampilkan semua char langsung, animasi reveal via CSS stagger
+  typedLen.value = TYPE_TEXT.length
+  typingDone.value = false
+
+  // Tunggu reveal animation selesai (delay stagger max ~0.6s + anim 0.55s)
+  await sleep(1200)
   typingDone.value = true
 
-  // Hold
+  // Hold sebentar
   phase.value = 'hold'
   await sleep(480)
 
