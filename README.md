@@ -1,265 +1,302 @@
-# Jetis Sumur — Sistem Informasi Pendataan Warga
+<div align="center">
 
-> Sistem pendataan warga berbasis web untuk Padukuhan Jetis Sumur, DI Yogyakarta.
-> Data KK, jiwa, mutasi, dan statistik — dikelola oleh pengurus, dibaca publik.
+# 🏘 Jetis Sumur — Sistem Informasi Pendataan Warga
 
-**Live →** https://jetis-sumur-web.vercel.app  
-**Dashboard →** `/ops` *(unlisted — hanya pengurus yang tahu URL ini)*
+**Platform pendataan warga digital untuk Padukuhan Jetis Sumur, DI Yogyakarta**
 
----
+[![Nuxt 3](https://img.shields.io/badge/Nuxt-3.17-00DC82?style=flat-square&logo=nuxt.js&logoColor=white)](https://nuxt.com)
+[![Vue 3](https://img.shields.io/badge/Vue-3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white)](https://vuejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Pinia](https://img.shields.io/badge/Pinia-3.0-FFD859?style=flat-square&logo=pinia&logoColor=black)](https://pinia.vuejs.org)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com)
+[![Google Sheets](https://img.shields.io/badge/DB-Google%20Sheets-34A853?style=flat-square&logo=googlesheets&logoColor=white)](https://sheets.google.com)
+[![License](https://img.shields.io/badge/License-Private-red?style=flat-square)](LICENSE)
 
-## Arsitektur
+<br/>
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     FRONTEND (Publik)                   │
-│   Nuxt 3 SSR · Vue 3 · Pinia · Tailwind CSS            │
-│   Beranda · Statistik · Profil · Berita · Layanan       │
-└────────────────────────┬────────────────────────────────┘
-                         │ fetch /api/*
-┌────────────────────────▼────────────────────────────────┐
-│                  SERVER / API (Nitro)                    │
-│   H3 route handlers · JWT session cookie                │
-│   Auth middleware · Rate limiting · Audit log           │
-└────────────────────────┬────────────────────────────────┘
-                         │ Google Sheets API v4
-┌────────────────────────▼────────────────────────────────┐
-│               DATABASE — Google Sheets                  │
-│   Spreadsheet ID: env SHEETS_SPREADSHEET_ID             │
-│   Service Account OAuth2 (server-only)                  │
-│   Tab: Warga · KK · Mutasi · Berita · Akun · Log · Surat│
-└─────────────────────────────────────────────────────────┘
-```
+**[🌐 Live Demo](https://jetis-sumur-web.vercel.app)** · **[📊 Statistik Publik](https://jetis-sumur-web.vercel.app/statistik)** · **[📋 Dokumentasi API](#api-endpoints)**
 
-### Layer ringkasan
+<br/>
 
-| Layer | Teknologi | Keterangan |
-|-------|-----------|------------|
-| **Frontend** | Nuxt 3 + Vue 3 | SSR, file-based routing, `<NuxtLink>` page transition |
-| **State** | Pinia | Auth store (`stores/auth.ts`) |
-| **Styling** | Tailwind CSS + custom CSS | Dark+emerald theme, CSS custom properties |
-| **Backend** | Nitro (H3) | API route handlers, server utils |
-| **Auth** | JWT cookie (`httpOnly`) | 8 jam, multi-role: `superadmin / admin / padukuhan` |
-| **Database** | Google Sheets API v4 | Spreadsheet sebagai DB — tidak perlu server DB |
-| **Deploy** | Vercel (Nitro preset) | SSR functions, edge-ready |
+> Data KK, jiwa, mutasi, dan statistik kependudukan — dikelola pengurus,
+> dibaca publik. Tanpa database server, tanpa biaya hosting mahal.
+
+</div>
 
 ---
 
-## Fitur
+## ✨ Highlights
 
-### 🌐 Publik (tanpa login)
-
-| Halaman | Deskripsi |
-|---------|-----------|
-| `/` | Beranda — statistik ringkas, kelompok umur, per RT, berita |
-| `/statistik` | Grafik & tabel kependudukan lengkap |
-| `/profil` | Profil padukuhan, sejarah, visi-misi |
-| `/struktur` | Struktur pengurus / pamong |
-| `/berita` | Berita & pengumuman padukuhan |
-| `/layanan` | Informasi layanan administrasi |
-| `/kontak` | Kontak pengurus |
-| `/verifikasi` | Verifikasi keaslian surat *(scan QR)* |
-| `/privasi` | Kebijakan privasi data warga |
-
-### 🔐 Ops Dashboard (`/ops` — unlisted)
-
-| Halaman | Deskripsi |
-|---------|-----------|
-| `/ops` | Dashboard ringkasan |
-| `/ops/warga` | CRUD data jiwa (penduduk) |
-| `/ops/kk` | Manajemen Kartu Keluarga |
-| `/ops/mutasi` | Catat mutasi: lahir, meninggal, pindah masuk/keluar |
-| `/ops/cari` | Pencarian global warga / KK |
-| `/ops/surat` | Pembuatan & arsip surat keterangan |
-| `/ops/laporan` | Rekap laporan per periode + export PDF |
-| `/ops/import` | Import data massal via CSV/Excel (wizard) |
-| `/ops/backup` | Backup & restore snapshot Sheets |
-| `/ops/peta` | Peta sebaran warga per RT |
-| `/ops/portal` | Pengumuman & konten portal publik |
-| `/ops/master` | Data master (RT, dusun, jabatan, dll) |
-| `/ops/log` | Audit log semua aksi pengurus |
-| `/ops/akun` | Manajemen akun pengurus (superadmin only) |
-
-### 🔑 Sistem Multi-Role
-
-| Role | Akses |
-|------|-------|
-| `superadmin` | Full access: semua fitur + manajemen akun |
-| `admin` | Semua fitur ops kecuali manajemen akun |
-| `padukuhan` | Read-only + input mutasi saja |
+- 🔐 **Multi-role auth** — `superadmin / admin / padukuhan` dengan akses granular
+- 📊 **Dashboard ops lengkap** — KK, jiwa, mutasi, surat, laporan, peta, audit log
+- 🗄️ **Zero-database-server** — Google Sheets sebagai backend, hemat biaya
+- 🎨 **Cinematic UI** — preloader dual-curtain, film grain, canvas particles, dark+emerald
+- 📱 **PWA-ready** — bisa di-install di HP, mobile-first
+- 🔏 **Privacy-first** — NIK & data sensitif tidak pernah tampil di halaman publik
+- 📄 **PDF generator** — surat keterangan dengan QR verifikasi
+- 🔍 **Pencarian global** — cari warga/KK dari satu kotak pencarian
+- 📥 **Import massal** — wizard CSV/Excel dengan validasi & preview
+- 📡 **Audit trail** — semua aksi pengurus tercatat dengan IP + timestamp
 
 ---
 
-## Alur Kerja
-
-### Alur data warga baru
+## 🏗 Arsitektur
 
 ```
-Pengurus (ops/warga) → POST /api/warga → sheets.ts → Google Sheets
-                                       ↓
-                                 Audit log ditulis → tab Log
-                                       ↓
-                            Publik /statistik fetch /api/stats → updated
+╔══════════════════════════════════════════════════════════════╗
+║                    FRONTEND — Nuxt 3 SSR                    ║
+║  Vue 3 · Pinia · Tailwind CSS · TypeScript                  ║
+║  ┌─────────┐ ┌──────────┐ ┌────────┐ ┌──────────┐          ║
+║  │ Beranda │ │Statistik │ │ Profil │ │  Berita  │  ...      ║
+║  └─────────┘ └──────────┘ └────────┘ └──────────┘          ║
+╚══════════════════════════╦═══════════════════════════════════╝
+                           ║ /api/* (Nitro H3)
+╔══════════════════════════╩═══════════════════════════════════╗
+║                    BACKEND — Nitro (H3)                     ║
+║  JWT httpOnly cookie · Rate limiting · Audit log            ║
+║  Auth middleware · PDF generator · Import wizard            ║
+║  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       ║
+║  │   Auth   │ │  Warga   │ │  Surat   │ │  Stats   │  ...  ║
+║  └──────────┘ └──────────┘ └──────────┘ └──────────┘       ║
+╚══════════════════════════╦═══════════════════════════════════╝
+                           ║ Google Sheets API v4
+╔══════════════════════════╩═══════════════════════════════════╗
+║              DATABASE — Google Sheets                       ║
+║  Warga · KK · Mutasi · Berita · Akun · Log · Surat · ...    ║
+║  Service Account OAuth2 (server-only, zero client exposure) ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
-### Alur login
+### Stack overview
+
+| Layer | Teknologi | Versi |
+|-------|-----------|-------|
+| Framework | Nuxt 3 | `^3.17.5` |
+| UI | Vue 3 | `^3.5.17` |
+| Routing | Vue Router | `^4.5.1` |
+| State | Pinia + @pinia/nuxt | `^3.0.3` |
+| Styling | Tailwind CSS + custom CSS | `^6.14.0` |
+| Language | TypeScript | `^5.9.2` |
+| Runtime | Nitro (H3) | bundled |
+| Database | Google Sheets API v4 | REST |
+| Auth | Google Service Account | JWT OAuth2 |
+| Deploy | Vercel (Nitro preset) | edge SSR |
+| Fonts | Source Sans 3 + Source Serif 4 | Google Fonts |
+| Package Manager | pnpm | `9.15.0` |
+
+---
+
+## 🗂 Struktur Proyek
 
 ```
-POST /api/auth/login
-  → cek credentials di tab Akun (Sheets)
-  → bcrypt compare password hash
-  → set JWT httpOnly cookie (8 jam)
-  → redirect ke /ops
+jetis-sumur-web/
+├── 📁 pages/
+│   ├── index.vue                 # Beranda — hero, statistik, berita
+│   ├── statistik.vue             # Grafik & tabel kependudukan
+│   ├── profil/index.vue          # Profil padukuhan
+│   ├── berita/index.vue          # Berita & pengumuman
+│   ├── layanan.vue               # Layanan administrasi
+│   ├── kontak.vue                # Kontak pengurus
+│   ├── verifikasi.vue            # Verifikasi surat via QR
+│   ├── privasi.vue               # Kebijakan privasi
+│   └── 📁 ops/                   # ⚠️  Unlisted — hanya pengurus
+│       ├── index.vue             # Dashboard ringkasan
+│       ├── warga.vue             # CRUD jiwa/penduduk
+│       ├── kk.vue                # Manajemen Kartu Keluarga
+│       ├── mutasi.vue            # Mutasi: lahir, meninggal, pindah
+│       ├── cari.vue              # Pencarian global
+│       ├── surat.vue             # Surat keterangan + PDF
+│       ├── laporan.vue           # Rekap + export
+│       ├── import.vue            # Import CSV/Excel wizard
+│       ├── backup.vue            # Backup & restore Sheets
+│       ├── peta.vue              # Peta sebaran per RT
+│       ├── portal.vue            # Konten halaman publik
+│       ├── master.vue            # Data master (RT, jabatan)
+│       ├── log.vue               # Audit log semua aksi
+│       └── akun.vue              # Manajemen akun (superadmin)
+│
+├── 📁 server/
+│   ├── 📁 api/                   # H3 route handlers
+│   │   ├── auth/                 # login · logout · session
+│   │   ├── warga/                # CRUD penduduk
+│   │   ├── keluarga/             # CRUD KK
+│   │   ├── mutasi/               # Mutasi warga
+│   │   ├── surat/                # Surat + arsip
+│   │   ├── akun/                 # User management
+│   │   ├── master/               # Data referensi
+│   │   ├── portal/               # Konten publik
+│   │   ├── import/               # Import wizard
+│   │   ├── stats.get.ts          # Statistik publik
+│   │   ├── search.get.ts         # Pencarian global
+│   │   ├── export.get.ts         # Export CSV
+│   │   ├── print.get.ts          # PDF generator
+│   │   ├── backup.{get,post}.ts  # Backup/restore
+│   │   ├── kk360.get.ts          # Profil KK lengkap
+│   │   ├── map.get.ts            # Data peta
+│   │   ├── berita.get.ts         # Berita publik
+│   │   ├── logs.get.ts           # Audit log
+│   │   ├── verify.get.ts         # Verifikasi surat
+│   │   ├── wa.post.ts            # WA notifikasi
+│   │   ├── onboard.post.ts       # Setup awal
+│   │   ├── health.get.ts         # Health check
+│   │   └── validate/nik.post.ts  # Validasi NIK
+│   └── 📁 utils/
+│       ├── sheets.ts             # Google Sheets read/write
+│       ├── auth.ts               # JWT + session + rate limit
+│       ├── db.ts                 # Abstraksi DB layer
+│       ├── google-auth.ts        # Service Account OAuth2
+│       ├── tenant.ts             # Multi-tenant config
+│       ├── types.ts              # Type definitions
+│       ├── helpers.ts            # Utility functions
+│       ├── print.ts              # HTML→PDF generator
+│       ├── import.ts             # CSV/Excel parser
+│       ├── validate.ts           # Validasi NIK, data
+│       └── seed.ts               # Seed akun superadmin
+│
+├── 📁 layouts/
+│   └── default.vue               # Shell: header, footer, preloader, atm
+├── 📁 stores/
+│   └── auth.ts                   # Pinia: auth state
+├── 📁 composables/
+│   └── useSite.ts                # Site/branding config
+├── 📁 assets/css/
+│   └── main.css                  # Design tokens + semua komponen
+├── 📁 public/
+│   ├── icon.svg
+│   └── manifest.webmanifest      # PWA manifest
+├── nuxt.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+└── .env.example
 ```
 
-### Alur surat
+---
+
+## 🎯 Fitur Lengkap
+
+### 🌐 Portal Publik
+
+| Halaman | URL | Deskripsi |
+|---------|-----|-----------|
+| Beranda | `/` | Hero, statistik ringkas, chart umur, per-RT, berita terbaru |
+| Statistik | `/statistik` | Grafik & tabel kependudukan lengkap |
+| Profil | `/profil` | Profil, sejarah, visi-misi padukuhan |
+| Struktur | `/struktur` | Struktur pengurus / pamong |
+| Berita | `/berita` | Berita & pengumuman padukuhan |
+| Layanan | `/layanan` | Info layanan administrasi |
+| Kontak | `/kontak` | Kontak pengurus |
+| Verifikasi | `/verifikasi` | Verifikasi keaslian surat via QR code |
+| Privasi | `/privasi` | Kebijakan privasi data warga |
+
+### 🔐 Dashboard Ops *(unlisted — URL tidak dipublikasikan)*
+
+| Modul | URL | Role minimum | Deskripsi |
+|-------|-----|-------------|-----------|
+| Dashboard | `/ops` | padukuhan | Ringkasan data + statistik |
+| Data Jiwa | `/ops/warga` | padukuhan | CRUD lengkap penduduk |
+| Kartu Keluarga | `/ops/kk` | padukuhan | Manajemen KK + 360° view |
+| Mutasi | `/ops/mutasi` | padukuhan | Lahir · meninggal · pindah masuk/keluar |
+| Pencarian | `/ops/cari` | padukuhan | Pencarian global warga & KK |
+| Surat | `/ops/surat` | admin | Buat surat + generate PDF + arsip |
+| Laporan | `/ops/laporan` | admin | Rekap periode + export CSV/PDF |
+| Import | `/ops/import` | admin | Import massal CSV/Excel + wizard validasi |
+| Backup | `/ops/backup` | superadmin | Snapshot & restore spreadsheet |
+| Peta | `/ops/peta` | padukuhan | Peta sebaran warga per RT |
+| Portal | `/ops/portal` | admin | Kelola konten halaman publik |
+| Data Master | `/ops/master` | admin | RT, jabatan, jenis mutasi, dll |
+| Audit Log | `/ops/log` | admin | Semua aksi + IP + timestamp |
+| Akun | `/ops/akun` | superadmin | Manajemen akun pengurus |
+
+### 👥 Sistem Multi-Role
+
+| Role | Deskripsi | Akses |
+|------|-----------|-------|
+| `superadmin` | Pengelola utama sistem | Full — termasuk manajemen akun & backup |
+| `admin` | Pengurus padukuhan | Semua fitur ops kecuali akun & backup |
+| `padukuhan` | Petugas lapangan | Read-only + input mutasi & warga |
+
+---
+
+## 🔄 Alur Kerja
+
+### Input data warga baru
 
 ```
-/ops/surat → isi form → POST /api/surat
-           → generate PDF via /api/print (HTML → PDF)
-           → simpan arsip di Sheets tab Surat
-           → QR verifikasi → /verifikasi?id=xxx
+Pengurus login /ops/warga
+        │
+        ▼ POST /api/warga
+   Validasi NIK + duplikat check
+        │
+        ▼ sheets.ts → Google Sheets (tab Warga)
+   Tulis ke Sheets
+        │
+        ├──▶ Audit log ditulis (tab Log) — IP + user + timestamp
+        │
+        └──▶ /api/stats cache invalidated → /statistik updated
+```
+
+### Alur surat keterangan
+
+```
+/ops/surat → isi form
+        │
+        ▼ POST /api/surat
+   Generate hash unik surat
+        │
+        ├──▶ Simpan arsip → tab Surat (Sheets)
+        │
+        ▼ GET /api/print?id=xxx
+   HTML template → PDF (server-side)
+        │
+        └──▶ QR code berisi /verifikasi?id=xxx
+                    │
+                    ▼ warga scan
+             GET /api/verify?id=xxx
+             → tampil data surat (tanpa NIK)
 ```
 
 ### Alur import massal
 
 ```
-Upload CSV/XLSX → POST /api/import/wizard
-               → parse + validate (NIK, format, duplikat)
-               → preview konfirmasi
-               → POST /api/bulk → batch write ke Sheets
+Upload CSV / XLSX
+        │
+        ▼ POST /api/import/preview
+   Parse + validasi (NIK, format, duplikat)
+        │
+        ▼ Tampil preview + error summary
+   Konfirmasi pengurus
+        │
+        ▼ POST /api/bulk
+   Batch write → Sheets (dengan rate limiting)
+        │
+        └──▶ Laporan hasil import (berhasil/gagal per baris)
+```
+
+### Alur autentikasi
+
+```
+POST /api/auth/login
+   │
+   ├── Rate limit check (max 12 attempt / 10 menit / IP)
+   ├── Lookup akun di tab Akun (Sheets)
+   ├── bcrypt.compare(password, hash)
+   └── Set JWT httpOnly cookie (8 jam)
+           │
+           ▼
+      Redirect → /ops
+      Middleware server-side cek cookie setiap request
 ```
 
 ---
 
-## Struktur Proyek
+## ⚙️ Setup & Instalasi
 
-```
-jetis-sumur-web/
-├── pages/
-│   ├── index.vue              # Beranda
-│   ├── statistik.vue          # Statistik kependudukan
-│   ├── profil/                # Profil padukuhan
-│   ├── berita/                # Berita & pengumuman
-│   ├── layanan.vue            # Layanan
-│   ├── kontak.vue             # Kontak
-│   ├── verifikasi.vue         # Verifikasi surat (QR)
-│   ├── privasi.vue            # Kebijakan privasi
-│   └── ops/                   # Dashboard pengelola (unlisted)
-│       ├── index.vue          # Dashboard
-│       ├── warga.vue          # Data jiwa
-│       ├── kk.vue             # Kartu Keluarga
-│       ├── mutasi.vue         # Mutasi warga
-│       ├── cari.vue           # Pencarian global
-│       ├── surat.vue          # Surat keterangan
-│       ├── laporan.vue        # Laporan & export
-│       ├── import.vue         # Import massal
-│       ├── backup.vue         # Backup & restore
-│       ├── peta.vue           # Peta sebaran
-│       ├── portal.vue         # Konten publik
-│       ├── master.vue         # Data master
-│       ├── log.vue            # Audit log
-│       └── akun.vue           # Manajemen akun
-│
-├── server/
-│   ├── api/
-│   │   ├── auth/              # login, logout, session
-│   │   ├── warga/             # CRUD penduduk
-│   │   ├── keluarga/          # CRUD KK
-│   │   ├── mutasi/            # Mutasi warga
-│   │   ├── surat/             # Surat keterangan
-│   │   ├── akun/              # Manajemen user
-│   │   ├── master/            # Data master
-│   │   ├── portal/            # Konten portal
-│   │   ├── import/            # Import wizard
-│   │   ├── stats.get.ts       # Statistik publik
-│   │   ├── search.get.ts      # Pencarian global
-│   │   ├── export.get.ts      # Export CSV
-│   │   ├── print.get.ts       # PDF generator
-│   │   ├── backup.get/post.ts # Backup/restore
-│   │   ├── kk360.get.ts       # Profil KK lengkap
-│   │   ├── map.get.ts         # Data peta
-│   │   ├── berita.get.ts      # Berita publik
-│   │   ├── logs.get.ts        # Audit log
-│   │   ├── verify.get.ts      # Verifikasi surat
-│   │   ├── wa.post.ts         # WhatsApp notifikasi
-│   │   ├── onboard.post.ts    # Setup awal
-│   │   ├── health.get.ts      # Health check
-│   │   ├── tenant.get.ts      # Info tenant
-│   │   ├── branding.get.ts    # Branding/site config
-│   │   └── validate/nik.post  # Validasi NIK
-│   └── utils/
-│       ├── sheets.ts          # Google Sheets read/write
-│       ├── auth.ts            # JWT + session + rate limit
-│       ├── db.ts              # Abstraksi DB (Sheets)
-│       ├── google-auth.ts     # Service Account OAuth2
-│       ├── tenant.ts          # Multi-tenant config
-│       ├── types.ts           # Type definitions
-│       ├── helpers.ts         # Utility functions
-│       ├── print.ts           # PDF/HTML generator
-│       ├── import.ts          # CSV/Excel parser
-│       ├── validate.ts        # Validasi NIK, data
-│       └── seed.ts            # Seed akun awal
-│
-├── layouts/
-│   └── default.vue            # Shell: header, footer, preloader, atmosphere
-│
-├── stores/
-│   └── auth.ts                # Pinia: auth state
-│
-├── composables/
-│   └── useSite.ts             # Site config (nama, alamat, dll)
-│
-├── assets/css/
-│   └── main.css               # Design tokens + semua komponen
-│
-├── public/
-│   ├── icon.svg               # App icon
-│   └── manifest.webmanifest   # PWA manifest
-│
-├── nuxt.config.ts             # Konfigurasi Nuxt
-└── .env.example               # Template variabel lingkungan
-```
+### Prasyarat
 
----
-
-## Dependensi & Library
-
-### Runtime dependencies
-
-| Package | Versi | Fungsi |
-|---------|-------|--------|
-| `nuxt` | ^3.17.5 | Framework SSR utama |
-| `vue` | ^3.5.17 | UI framework |
-| `vue-router` | ^4.5.1 | Client-side routing |
-| `pinia` | ^3.0.3 | State management |
-| `@pinia/nuxt` | ^0.11.2 | Integrasi Pinia × Nuxt |
-
-### Dev dependencies
-
-| Package | Versi | Fungsi |
-|---------|-------|--------|
-| `@nuxtjs/tailwindcss` | ^6.14.0 | Utility CSS |
-| `typescript` | ^5.9.2 | Type safety |
-
-### External services (via env)
-
-| Service | Keterangan |
-|---------|------------|
-| **Google Sheets API v4** | Database utama — read/write spreadsheet |
-| **Google Service Account** | Auth server-side ke Sheets (JWT OAuth2) |
-| **Vercel** | Hosting + serverless functions (Nitro preset) |
-
-### Fonts (Google Fonts CDN)
-
-| Font | Weight | Digunakan untuk |
-|------|--------|----------------|
-| Source Sans 3 | 400, 600, 700 | Body text, UI |
-| Source Serif 4 | 600, 700 | Heading, display, preloader |
-
----
-
-## Setup & Konfigurasi
+- Node.js `≥ 18`
+- pnpm `9.x` — `npm install -g pnpm`
+- Akun Google Cloud (untuk Sheets API)
 
 ### 1. Clone & install
 
@@ -269,148 +306,270 @@ cd jetis-sumur-web
 pnpm install
 ```
 
-### 2. Environment variables
-
-Buat file `.env`:
+### 2. Buat file `.env`
 
 ```env
-# Auth
-AUTH_SECRET=ganti-dengan-secret-panjang
+# ── Auth ──────────────────────────────────────
+AUTH_SECRET=isi-random-string-panjang-minimal-32-karakter
 
-# Google Sheets (database)
+# ── Google Sheets (database) ──────────────────
 SHEETS_SPREADSHEET_ID=id-spreadsheet-anda
-GOOGLE_SERVICE_ACCOUNT_EMAIL=nama@project.iam.gserviceaccount.com
-GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+GOOGLE_SERVICE_ACCOUNT_EMAIL=nama@project-id.iam.gserviceaccount.com
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nisi...\n-----END PRIVATE KEY-----\n"
 
-# Site
+# ── Site ──────────────────────────────────────
 NUXT_PUBLIC_SITE_URL=https://domain-anda.vercel.app
 NUXT_PUBLIC_TENANT_ID=jetis-sumur
 ```
 
+> **Tip:** Salin `.env.example` sebagai titik awal.
+
 ### 3. Setup Google Service Account
 
 1. Buka [Google Cloud Console](https://console.cloud.google.com)
-2. Aktifkan **Google Sheets API**
-3. Buat **Service Account** → buat key JSON
-4. Salin `client_email` dan `private_key` ke `.env`
-5. Share spreadsheet ke email service account (Editor)
+2. Buat project baru atau gunakan yang ada
+3. Aktifkan **Google Sheets API** di *APIs & Services → Library*
+4. Buat **Service Account** di *IAM & Admin → Service Accounts*
+5. Buat key JSON → download
+6. Salin `client_email` → `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+7. Salin `private_key` → `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
+8. **Share spreadsheet** ke email service account dengan role **Editor**
 
-### 4. Inisialisasi spreadsheet
-
-Jalankan sekali setelah env terkonfigurasi:
-
-```bash
-# Health check — pastikan mode=sheets
-curl https://domain-anda.vercel.app/api/health
-
-# Onboard (buat tab + akun superadmin awal)
-curl -X POST https://domain-anda.vercel.app/api/onboard
-```
-
-### 5. Dev lokal
+### 4. Inisialisasi sistem
 
 ```bash
+# Jalankan dev server
 pnpm dev
-# → http://localhost:3000
+
+# Cek koneksi Sheets
+curl http://localhost:3000/api/health
+# → {"ok":true,"mode":"sheets","tenantId":"jetis-sumur"}
+
+# Setup awal: buat tab Sheets + akun superadmin
+curl -X POST http://localhost:3000/api/onboard
 ```
 
-### 6. Build & deploy
+### 5. Build & deploy
 
 ```bash
+# Build production
 pnpm build
-# Atau push ke GitHub → Vercel auto-deploy
+
+# Preview lokal
+pnpm preview
 ```
 
----
-
-## Struktur Google Sheets (Database)
-
-| Tab | Kolom utama | Deskripsi |
-|-----|-------------|-----------|
-| `Warga` | NIK, nama, tgl_lahir, jenis_kelamin, RT, status, noKK | Data jiwa/penduduk |
-| `KK` | noKK, kepalaKeluarga, alamat, RT, jumlahJiwa | Kartu Keluarga |
-| `Mutasi` | tgl, jenis, NIK, nama, keterangan, operator | Log perubahan warga |
-| `Berita` | id, judul, tanggal, konten, penulis, status | Berita padukuhan |
-| `Akun` | username, password_hash, role, nama, aktif | Akun pengurus |
-| `Log` | tgl, user, aksi, target, detail, ip | Audit trail semua aksi |
-| `Surat` | id, jenis, nama, NIK, tgl, hash, status | Arsip surat keterangan |
-| `Master` | jenis, kode, nilai | RT, jabatan, jenis mutasi |
-| `Portal` | id, jenis, judul, konten, status | Konten halaman publik |
-| `Branding` | key, value | Nama, alamat, tagline, dll |
+**Deploy ke Vercel:**
+1. Push ke GitHub
+2. Import repo di [vercel.com](https://vercel.com)
+3. Tambahkan semua env vars di *Settings → Environment Variables*
+4. Deploy otomatis setiap push ke `main`
 
 ---
 
-## Security
+## 🗄️ Skema Database (Google Sheets)
 
-- Password disimpan sebagai **bcrypt hash** (bukan plaintext)
-- Session JWT `httpOnly` cookie — tidak bisa diakses JS
-- **Rate limiting**: max 12 login attempt / 10 menit / IP
-- `/ops` URL **unlisted** — tidak ada link publik, tidak di sitemap
-- NIK dan data sensitif **tidak pernah ditampilkan** di halaman publik
-- Audit log semua aksi CRUD dengan IP + timestamp
-- Service Account key hanya ada di environment Vercel (server-only)
+| Tab | Kolom utama | Keterangan |
+|-----|-------------|------------|
+| `Warga` | NIK · nama · tgl_lahir · jenis_kelamin · RT · status · noKK | Data jiwa/penduduk |
+| `KK` | noKK · kepalaKeluarga · alamat · RT · jumlahJiwa | Kartu Keluarga |
+| `Mutasi` | tgl · jenis · NIK · nama · keterangan · operator | Log perubahan warga |
+| `Berita` | id · judul · tanggal · konten · penulis · status | Berita padukuhan |
+| `Akun` | username · password_hash · role · nama · aktif | Akun pengurus |
+| `Log` | tgl · user · aksi · target · detail · ip | Audit trail semua aksi |
+| `Surat` | id · jenis · nama · NIK · tgl · hash · status | Arsip surat keterangan |
+| `Master` | jenis · kode · nilai | RT, jabatan, jenis mutasi |
+| `Portal` | id · jenis · judul · konten · status | Konten halaman publik |
+| `Branding` | key · value | Nama, alamat, tagline, dll |
 
----
-
-## UI & Design System
-
-| Elemen | Keterangan |
-|--------|------------|
-| **Theme** | Dark + emerald (`#3f9d6c` accent) |
-| **Preloader** | Dual-curtain sinematik (haviq.dev pattern) — wave reveal per huruf, 2 panel exit ke atas |
-| **Atmosfer** | Film grain noise + bloom orbs + canvas particles |
-| **Transisi** | Page slide out-in + route curtain per navigasi |
-| **Responsive** | Mobile-first, hamburger menu |
-| **Dark/Light** | Toggle tersimpan di localStorage |
-| **PWA** | Manifest + icon — bisa di-install di HP |
+> **NIK tidak pernah diekspos** ke halaman publik — hanya tersedia di server-side handler dan dashboard terautentikasi.
 
 ---
 
-## API Endpoints
+## 🔌 API Reference
 
-### Publik (tanpa auth)
+### Publik *(tanpa autentikasi)*
 
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
-| `GET` | `/api/stats` | Statistik kependudukan |
-| `GET` | `/api/berita` | Daftar berita |
-| `GET` | `/api/tenant` | Info site/branding |
-| `GET` | `/api/health` | Health check + mode |
-| `GET` | `/api/verify` | Verifikasi surat (by ID) |
+| `GET` | `/api/health` | Health check — `{ok, mode, tenantId}` |
+| `GET` | `/api/stats` | Statistik kependudukan publik |
+| `GET` | `/api/berita` | Daftar berita padukuhan |
+| `GET` | `/api/tenant` | Info site & branding |
+| `GET` | `/api/verify?id=` | Verifikasi keaslian surat |
 | `POST` | `/api/auth/login` | Login pengurus |
-| `POST` | `/api/auth/logout` | Logout |
+| `POST` | `/api/auth/logout` | Logout + hapus cookie |
 | `GET` | `/api/auth/session` | Cek sesi aktif |
 
-### Terproteksi (perlu cookie sesi)
+### Terproteksi *(perlu cookie sesi)*
 
-| Method | Endpoint | Role minimum |
-|--------|----------|-------------|
-| `GET/POST` | `/api/warga` | padukuhan |
-| `GET/POST` | `/api/keluarga` | padukuhan |
-| `GET/POST` | `/api/mutasi` | padukuhan |
-| `GET/POST` | `/api/surat` | admin |
-| `GET` | `/api/search` | padukuhan |
-| `GET` | `/api/export` | admin |
-| `GET` | `/api/print` | admin |
-| `GET` | `/api/kk360` | admin |
-| `GET` | `/api/map` | padukuhan |
-| `GET` | `/api/logs` | admin |
-| `GET/POST` | `/api/backup` | superadmin |
-| `POST` | `/api/import` | admin |
-| `POST` | `/api/bulk` | admin |
-| `GET/POST` | `/api/master` | admin |
-| `GET/POST` | `/api/portal` | admin |
-| `GET/POST` | `/api/akun` | superadmin |
-| `POST` | `/api/wa` | admin |
-| `POST` | `/api/validate/nik` | padukuhan |
-
----
-
-## Lisensi & Penggunaan
-
-Dibuat untuk **Padukuhan Jetis Sumur**, Sleman, DI Yogyakarta.  
-Source code ini adalah milik pengembang — tidak untuk didistribusikan ulang tanpa izin.
+| Method | Endpoint | Role min. | Deskripsi |
+|--------|----------|-----------|-----------|
+| `GET/POST` | `/api/warga` | padukuhan | CRUD penduduk |
+| `GET/POST` | `/api/keluarga` | padukuhan | CRUD Kartu Keluarga |
+| `GET/POST` | `/api/mutasi` | padukuhan | Mutasi warga |
+| `GET` | `/api/search` | padukuhan | Pencarian global |
+| `GET` | `/api/kk360` | admin | Profil KK 360° |
+| `GET` | `/api/map` | padukuhan | Data peta per RT |
+| `GET/POST` | `/api/surat` | admin | Surat keterangan |
+| `GET` | `/api/print` | admin | Generate PDF |
+| `GET` | `/api/export` | admin | Export CSV |
+| `GET` | `/api/logs` | admin | Audit log |
+| `GET/POST` | `/api/master` | admin | Data master |
+| `GET/POST` | `/api/portal` | admin | Konten publik |
+| `POST` | `/api/import` | admin | Import wizard |
+| `POST` | `/api/bulk` | admin | Batch write |
+| `POST` | `/api/wa` | admin | WA notifikasi |
+| `POST` | `/api/validate/nik` | padukuhan | Validasi NIK |
+| `GET/POST` | `/api/backup` | superadmin | Backup/restore |
+| `GET/POST` | `/api/akun` | superadmin | Manajemen akun |
 
 ---
 
-*Dibangun dengan Nuxt 3 · Deployed on Vercel · Database via Google Sheets*
+## 🔒 Keamanan
+
+| Aspek | Implementasi |
+|-------|-------------|
+| **Password** | Disimpan sebagai bcrypt hash — tidak pernah plaintext |
+| **Session** | JWT `httpOnly` cookie, tidak bisa diakses JavaScript |
+| **Rate limiting** | Max 12 login attempt / 10 menit / IP |
+| **URL ops** | `/ops` unlisted — tidak di nav publik, tidak di sitemap |
+| **Data publik** | NIK, HP, alamat lengkap tidak pernah di response publik |
+| **Audit trail** | Semua CRUD dicatat: user + aksi + target + IP + timestamp |
+| **SA key** | Hanya di environment server Vercel, tidak pernah ke client |
+| **CORS** | Strict origin matching via Nitro |
+
+---
+
+## 🎨 Design System
+
+```
+Design language: dark + emerald
+Accent:  #3f9d6c  (emerald green)
+Surface: #0f1a14  → #1a2820
+Border:  rgba(63, 157, 108, 0.18)
+```
+
+| Elemen | Detail |
+|--------|--------|
+| **Preloader** | Dual-curtain sinematik — wave reveal per huruf, 2 panel exit ke atas |
+| **Typewriter** | `PADUKUHAN JETIS SUMUR` — stagger 45ms, fade+slide+blur per karakter |
+| **Atmosfer** | Film grain noise + soft bloom orbs + canvas floating particles |
+| **Page transition** | Slide out-in + route curtain wipe per navigasi |
+| **Cards** | Hover lift + border accent + shadow bloom |
+| **Dark/Light** | Toggle tersimpan localStorage |
+| **PWA** | Manifest + icon — installable di HP |
+| **Font** | Source Serif 4 (display) + Source Sans 3 (body) |
+
+---
+
+## 📦 Dependencies
+
+### Runtime
+
+```json
+{
+  "nuxt": "^3.17.5",
+  "vue": "^3.5.17",
+  "vue-router": "^4.5.1",
+  "pinia": "^3.0.3",
+  "@pinia/nuxt": "^0.11.2"
+}
+```
+
+### Dev
+
+```json
+{
+  "@nuxtjs/tailwindcss": "^6.14.0",
+  "typescript": "^5.9.2"
+}
+```
+
+### External Services
+
+| Service | Keperluan | Biaya |
+|---------|-----------|-------|
+| Google Sheets API v4 | Database utama | Gratis (quota cukup) |
+| Google Service Account | Auth server-side | Gratis |
+| Google Fonts | Source Serif 4 + Source Sans 3 | Gratis |
+| Vercel | Hosting + SSR functions | Gratis (Hobby) |
+
+---
+
+## 🗺 Roadmap
+
+- [x] Multi-role auth (superadmin / admin / padukuhan)
+- [x] CRUD warga & KK
+- [x] Mutasi penduduk
+- [x] Statistik publik + grafik
+- [x] Surat keterangan + PDF + QR verifikasi
+- [x] Import massal CSV/Excel
+- [x] Audit log
+- [x] Backup & restore
+- [x] Cinematic preloader + page transitions
+- [x] PWA manifest
+- [x] Multi-tenant foundation
+- [ ] WhatsApp notifikasi pengurus (via WA Business API)
+- [ ] Peta interaktif sebaran warga (Leaflet)
+- [ ] Dashboard RT — akses terbatas per RT
+- [ ] Agenda & pengumuman terjadwal
+- [ ] Export laporan ke Word/Excel
+- [ ] Mobile app (PWA install + offline)
+- [ ] Notifikasi push (web push API)
+- [ ] Multi-padukuhan / white-label
+
+---
+
+## 📋 Changelog
+
+### v2.0.0 — 2026
+- 🎨 Redesign UI: dark+emerald cinematic, dual-curtain preloader
+- 🔐 Multi-role auth dengan JWT httpOnly + rate limiting
+- 📊 Homepage redesign: stats card, age bands, RT chart
+- 🔄 Route curtain per-tab navigation
+- ✨ Wave reveal per karakter (stagger, bukan ketikan)
+- 📄 PDF surat keterangan + QR verifikasi
+- 📥 Import wizard CSV/Excel dengan validasi
+- 💾 Backup & restore snapshot Sheets
+- 🗺 Peta sebaran warga
+- 📡 Audit log lengkap
+
+### v1.0.0
+- MVP: CRUD warga & KK
+- Login sederhana
+- Statistik dasar
+- Google Sheets sebagai database
+
+---
+
+## 🤝 Kontribusi
+
+Proyek ini bersifat privat untuk kebutuhan Padukuhan Jetis Sumur.
+
+Jika kamu ingin mengadaptasi sistem ini untuk padukuhan/desa lain:
+
+1. Fork repo ini
+2. Ganti `NUXT_PUBLIC_TENANT_ID` dan konfigurasi di `composables/useSite.ts`
+3. Sesuaikan nama, logo, dan warna di `assets/css/main.css`
+4. Setup spreadsheet baru + service account
+5. Deploy ke Vercel
+
+---
+
+## 📄 Lisensi
+
+© 2026 Padukuhan Jetis Sumur — Semua hak dilindungi.
+
+Source code ini dibuat khusus untuk Padukuhan Jetis Sumur, Sleman, DI Yogyakarta.
+Tidak untuk didistribusikan ulang tanpa izin tertulis dari pengembang.
+
+---
+
+<div align="center">
+
+Dibuat dengan ❤️ untuk warga Padukuhan Jetis Sumur
+
+**[Nuxt 3](https://nuxt.com)** · **[Vue 3](https://vuejs.org)** · **[Vercel](https://vercel.com)** · **[Google Sheets](https://sheets.google.com)**
+
+</div>
