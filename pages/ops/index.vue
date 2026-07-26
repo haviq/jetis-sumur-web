@@ -40,8 +40,11 @@
         <div>
           <h1 class="font-display text-2xl font-bold">Ringkasan</h1>
           <p class="muted text-sm mt-1">
-            Mode {{ stats?.mode || '…' }} · {{ auth.user.nama }}
+            Mode {{ stats?.mode || '…' }} ·
+            <span class="badge-role align-middle" :class="roleBadgeClass">{{ roleLabel }}</span>
+            · {{ auth.user.nama }}
             <span v-if="auth.user.tenantId"> · {{ auth.user.tenantId }}</span>
+            <span v-if="auth.user.rtScope?.length"> · RT {{ auth.user.rtScope.join(', ') }}</span>
             · portal {{ stats?.portalPending || 0 }} · surat draft {{ stats?.suratPending || 0 }}
           </p>
         </div>
@@ -138,6 +141,20 @@ const cards = computed(() => [
   { label: 'Laki-laki', value: stats.value?.laki },
   { label: 'Perempuan', value: stats.value?.perempuan },
 ])
+
+const roleLabel = computed(() => {
+  const r = auth.user?.role
+  if (r === 'super_admin') return 'Super Admin'
+  if (r === 'admin') return 'Admin'
+  return 'Padukuhan'
+})
+
+const roleBadgeClass = computed(() => {
+  const r = auth.user?.role
+  if (r === 'super_admin') return 'badge-role--super'
+  if (r === 'admin') return 'badge-role--admin'
+  return 'badge-role--padukuhan'
+})
 
 async function onLogin() {
   loading.value = true

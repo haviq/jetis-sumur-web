@@ -65,7 +65,7 @@ export function verifySession(token: string | undefined | null): SessionUser | n
       id: data.id,
       nama: data.nama,
       username: data.username,
-      role: data.role as Role,
+      role: normalizeRole(data.role),
       tenantId: data.tenantId || 'jetis-sumur',
       rtScope: Array.isArray(data.rtScope) ? data.rtScope : undefined,
     }
@@ -97,14 +97,35 @@ export function sessionFromEvent(event: { node: { req: { headers: { cookie?: str
   return verifySession(readCookie(event.node.req.headers.cookie))
 }
 
+export function normalizeRole(raw: unknown): Role {
+  const s = String(raw || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_')
+  if (s === 'super_admin' || s === 'superadmin' || s === 'super' || s === 'owner') return 'super_admin'
+  if (s === 'admin' || s === 'administrator' || s === 'pengelola') return 'admin'
+  if (s === 'padukuhan' || s === 'rt' || s === 'operator' || s === 'perangkat') return 'padukuhan'
+  // fallback aman: paling terbatas
+  return 'padukuhan'
+}
+
+/**
+ * Role matrix:
+ * - super_admin: full (termasuk users + settings)
+ * - admin: semua ops kecuali users/settings
+ * - padukuhan: data harian + mutasi + print/surat (tanpa import/backup/master/audit/users)
+ */
 export function canAccess(
   role: Role,
-  need: 'read' | 'write' | 'mutasi' | 'import' | 'master' | 'users' | 'audit' | 'settings' | 'print',
+  need: 'read' | 'write' | 'mutasi' | 'import' | 'master' | 'users' | 'audit' | 'settings' | 'print' | 'backup',
 ): boolean {
-  if (role === 'super_admin') return true
-  if (role === 'admin') return need !== 'users' && need !== 'settings'
-  // padukuhan: CRUD + print + mutasi, no master/users/settings
-  return need === 'read' || need === 'write' || need === 'mutasi' || need === 'import' || need === 'print'
+  const r = normalizeRole(role)
+  if (r === 'super_admin') return true
+  if (r === 'admin') {
+    return need !== 'users' && need !== 'settings'
+  }
+  // padukuhan
+  return need === 'read' || need === 'write' || need === 'mutasi' || need === 'print'
 }
 
 /** Simple in-memory login rate limit (per instance / warm lambda) */

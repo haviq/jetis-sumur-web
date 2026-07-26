@@ -294,10 +294,56 @@ table.data tbody tr:hover td {
 }
 
 .nav-link {
-  @apply rounded-lg px-3 py-2 text-sm font-medium transition;
+  @apply inline-flex shrink-0 items-center rounded-lg px-3 py-2 text-sm font-medium transition;
   position: relative;
   color: var(--muted);
-  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Ops horizontal tab strip — scroll, jangan potong label */
+.ops-nav-scroll {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 0.55rem;
+  mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 28px), transparent 100%);
+}
+
+.ops-nav-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.ops-nav-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 999px;
+}
+
+.badge-role {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide;
+  border: 1px solid var(--border);
+}
+.badge-role--super {
+  background: color-mix(in srgb, #a78bfa 18%, transparent);
+  color: #c4b5fd;
+  border-color: color-mix(in srgb, #a78bfa 40%, var(--border));
+}
+.badge-role--admin {
+  background: var(--accent-dim);
+  color: var(--accent-bright, var(--accent));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.badge-role--padukuhan {
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 35%, var(--border));
+}
+[data-theme='light'] .badge-role--super {
+  color: #6d28d9;
+}
+[data-theme='light'] .badge-role--padukuhan {
+  color: #a15c07;
 }
 
 .nav-link:hover {

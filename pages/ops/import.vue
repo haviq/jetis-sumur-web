@@ -1,6 +1,7 @@
 <template>
   <div>
     <div v-if="!auth.user" class="muted">Silakan login di /ops</div>
+    <div v-else-if="!auth.isAdmin" class="muted">Hanya admin / super admin yang boleh import.</div>
     <div v-else>
       <h1 class="font-display text-2xl font-bold">Import wizard</h1>
       <p class="text-sm muted mt-1">Preview validasi CSV → commit. Template: NIK, nama, nomor_kk, …</p>
@@ -102,5 +103,6 @@ async function commit() {
 onMounted(async () => {
   if (!auth.loaded) await auth.fetchSession()
   if (!auth.user) return navigateTo('/ops')
+  if (!auth.isAdmin) return navigateTo('/ops')
 })
 </script>

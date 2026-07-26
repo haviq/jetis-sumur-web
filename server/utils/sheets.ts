@@ -3,6 +3,7 @@
  * akun, keluarga, warga, mutasi, log_aktivitas, master, berita
  */
 import { sheetsConfigured, sheetsEnv, sheetsFetch, ensureSheetTabs } from './google-auth'
+import { normalizeRole } from './auth'
 import type {
   Akun,
   Berita,
@@ -153,7 +154,7 @@ function parseAkun(o: Record<string, string>): Akun | null {
     nama: o.nama || o.username,
     username: o.username,
     passwordHash: o.password_hash || '',
-    role: (o.role as Akun['role']) || 'padukuhan',
+    role: normalizeRole(o.role),
     status: (o.status as Akun['status']) || 'aktif',
     rtScope: scope.length ? scope : undefined,
     lastLogin: o.last_login || undefined,

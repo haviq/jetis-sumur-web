@@ -1,6 +1,6 @@
 export default defineEventHandler(async (event) => {
   const user = sessionFromEvent(event)
-  if (!user || !canAccess(user.role, 'write') || user.role === 'padukuhan') {
+  if (!user || !canAccess(user.role, 'backup')) {
     throw createError({ statusCode: 401, statusMessage: 'unauthorized' })
   }
   await ensureHydrated()

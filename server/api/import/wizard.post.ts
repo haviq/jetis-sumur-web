@@ -1,6 +1,6 @@
 export default defineEventHandler(async (event) => {
   const user = sessionFromEvent(event)
-  if (!user || !canAccess(user.role, 'write')) {
+  if (!user || !canAccess(user.role, 'import')) {
     throw createError({ statusCode: 401, statusMessage: 'unauthorized' })
   }
   const body = await readBody<{

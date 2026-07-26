@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     id: akun.id,
     nama: akun.nama,
     username: akun.username,
-    role: akun.role,
+    role: normalizeRole(akun.role),
     tenantId: tenant.id,
     rtScope: akun.rtScope,
   }
