@@ -10,40 +10,40 @@
     </div>
 
     <!--
-      Preloader full (pertama kali load):
-      1) typing PADUKUHAN JETIS SUMUR per huruf
-      2) hold sebentar
-      3) slide atas→bawah lalu balik bawah→atas (CSS keyframes)
-      Skip di /ops dan sesi yang sudah pernah lihat.
+      Preloader dual-curtain (haviq.dev pattern, Nuxt/CSS edition):
+      1) Dua panel menutup layar (bg + fg)
+      2) Typewriter PADUKUHAN JETIS SUMUR per huruf di tengah
+      3) Hold sebentar
+      4) EXIT: panel A slide ke atas, panel B slide ke atas stagger 150ms
+      Skip di /ops + sesi yang sudah pernah load.
     -->
-    <Transition name="preloader-fade">
-      <div
-        v-if="phase !== 'done'"
-        class="preloader"
-        :class="`is-${phase}`"
-        aria-hidden="true"
-        style="pointer-events: all"
-      >
-        <div class="preloader-slide">
-          <div class="preloader-noise" />
-          <div class="preloader-orb" />
-          <div class="preloader-center">
-            <div class="preloader-mark">JS</div>
-            <div class="preloader-type" aria-label="Padukuhan Jetis Sumur">
-              <span
-                v-for="(ch, i) in typedChars"
-                :key="`${i}-${ch}`"
-                class="preloader-char"
-                :class="{ space: ch === ' ' }"
-                :style="{ animationDelay: `${i * 0.015}s` }"
-              >{{ ch === ' ' ? '\u00A0' : ch }}</span>
-              <span class="preloader-caret" :class="{ blink: typingDone }" />
-            </div>
-            <div class="preloader-sub">Pendataan Warga · DI Yogyakarta</div>
+    <div
+      v-if="phase !== 'done'"
+      class="pre-wrap"
+      :class="`is-${phase}`"
+      aria-hidden="true"
+    >
+      <!-- Panel A: foreground (gelap, ada konten) -->
+      <div class="pre-panel pre-panel--a">
+        <div class="pre-noise" />
+        <div class="pre-orb" />
+        <div class="pre-center">
+          <div class="pre-mark">JS</div>
+          <div class="pre-type" aria-label="Padukuhan Jetis Sumur">
+            <span
+              v-for="(ch, i) in typedChars"
+              :key="`${i}-${ch}`"
+              class="pre-char"
+              :class="{ space: ch === ' ' }"
+            >{{ ch === ' ' ? '\u00A0' : ch }}</span>
+            <span class="pre-caret" :class="{ blink: typingDone }" />
           </div>
+          <div class="pre-sub">Pendataan Warga · DI Yogyakarta</div>
         </div>
       </div>
-    </Transition>
+      <!-- Panel B: background (lebih terang, slide stagger) -->
+      <div class="pre-panel pre-panel--b" />
+    </div>
 
     <!-- Route curtain: mini slide per navigasi tab -->
     <div
@@ -206,9 +206,9 @@ async function runPreloader() {
   phase.value = 'hold'
   await sleep(480)
 
-  // Slide: CSS keyframe ~1.1s
+  // EXIT: dual-panel slide ke atas (panel-a 0.78s, panel-b stagger 0.15s = ~1.0s)
   phase.value = 'slide'
-  await sleep(1150)
+  await sleep(1050)
 
   phase.value = 'done'
   sessionStorage.setItem(PRELOADER_KEY, '1')

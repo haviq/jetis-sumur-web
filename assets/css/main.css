@@ -467,32 +467,10 @@ table.data tbody tr:hover td {
   transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* —— Preloader v4: 1 slide saja ——
-   typing → hold → slide (atas→bawah → balik bawah→atas)
-   tanpa loading bar, tanpa dual panel
-*/
-.preloader {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: all;
-  overflow: hidden;
-}
+/* ══ PRELOADER KONTEN (pre-* classes — dual-curtain pattern) ══ */
 
-.preloader-slide {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  will-change: transform;
-  background:
-    radial-gradient(700px 380px at 50% 45%, rgba(63, 157, 108, 0.16), transparent 65%),
-    linear-gradient(180deg, #070c0a 0%, #0a1210 100%);
-  transform: translateY(0);
-}
-
-.preloader-noise {
+/* Noise texture di atas panel A */
+.pre-noise {
   position: absolute;
   inset: 0;
   opacity: 0.07;
@@ -502,7 +480,8 @@ table.data tbody tr:hover td {
   pointer-events: none;
 }
 
-.preloader-orb {
+/* Orb glow */
+.pre-orb {
   position: absolute;
   left: 50%;
   top: 42%;
@@ -512,52 +491,30 @@ table.data tbody tr:hover td {
   border-radius: 999px;
   background: radial-gradient(circle, rgba(63, 157, 108, 0.28) 0%, transparent 68%);
   filter: blur(42px);
-  animation: preloader-orb 3.2s ease-in-out infinite alternate;
+  animation: pre-orb-pulse 3.2s ease-in-out infinite alternate;
   pointer-events: none;
 }
-
-@keyframes preloader-orb {
+@keyframes pre-orb-pulse {
   from { opacity: 0.65; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
-/* Satu slide: turun dulu, lalu naik keluar ke atas */
-.preloader.is-slide .preloader-slide {
-  animation: pre-one-slide 1.1s cubic-bezier(0.76, 0, 0.24, 1) forwards;
-}
-
-@keyframes pre-one-slide {
-  /* start full cover */
-  0% {
-    transform: translateY(0);
-  }
-  /* slide atas → bawah (keluar ke bawah) */
-  45% {
-    transform: translateY(105%);
-  }
-  /* instant jump ke bawah layar (siap naik) */
-  46% {
-    transform: translateY(105%);
-  }
-  /* slide balik bawah → atas (keluar ke atas, buka web) */
-  100% {
-    transform: translateY(-105%);
-  }
-}
-
-.preloader-center {
+/* Center content */
+.pre-center {
   position: relative;
   z-index: 3;
   text-align: center;
   padding: 1.5rem;
 }
 
-.preloader.is-slide .preloader-center {
-  opacity: 0.2;
-  transition: opacity 0.2s ease;
+/* Fade out center saat slide exit */
+.pre-wrap.is-slide .pre-center {
+  opacity: 0.15;
+  transition: opacity 0.18s ease;
 }
 
-.preloader-mark {
+/* Logo mark */
+.pre-mark {
   width: 52px;
   height: 52px;
   margin: 0 auto 1.1rem;
@@ -575,7 +532,8 @@ table.data tbody tr:hover td {
   animation: pulse 1.15s ease-in-out infinite;
 }
 
-.preloader-type {
+/* Typewriter text */
+.pre-type {
   font-family: 'Source Serif 4', Georgia, serif;
   font-weight: 700;
   font-size: clamp(0.95rem, 3.8vw, 1.45rem);
@@ -591,14 +549,14 @@ table.data tbody tr:hover td {
   text-shadow: 0 0 40px rgba(63, 157, 108, 0.35);
 }
 
-.preloader-char {
+/* Per-character animation */
+.pre-char {
   display: inline-block;
   animation: char-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.preloader-char.space {
+.pre-char.space {
   width: 0.45em;
 }
-
 @keyframes char-in {
   from {
     opacity: 0;
@@ -612,7 +570,8 @@ table.data tbody tr:hover td {
   }
 }
 
-.preloader-caret {
+/* Blinking caret */
+.pre-caret {
   display: inline-block;
   width: 2px;
   height: 1.05em;
@@ -621,18 +580,16 @@ table.data tbody tr:hover td {
   background: var(--accent-bright, var(--accent));
   box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
 }
-.preloader-caret.blink {
+.pre-caret.blink {
   animation: caret-blink 0.85s steps(1) infinite;
 }
-
 @keyframes caret-blink {
-  0%,
-  45% { opacity: 1; }
-  50%,
-  100% { opacity: 0; }
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
-.preloader-sub {
+/* Sub label */
+.pre-sub {
   margin-top: 0.7rem;
   font-size: 0.72rem;
   letter-spacing: 0.28em;
@@ -731,9 +688,8 @@ table.data tbody tr:hover td {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .preloader-slide,
-  .preloader-center,
-  .preloader-orb,
+  .pre-panel,
+  .pre-orb,
   .page-enter-active,
   .page-leave-active,
   .reveal,
@@ -754,18 +710,59 @@ table.data tbody tr:hover td {
   }
 }
 
-/* ── Preloader: idle = hidden (cegah blank flash) ── */
-.preloader.is-idle {
-  opacity: 0;
-  pointer-events: none;
+/* ══ PRELOADER DUAL-CURTAIN (haviq.dev pattern) ══
+   pre-wrap: container full viewport, pointer-events all
+   pre-panel--a: fg (dark, konten), pre-panel--b: bg (accent-tinted)
+   EXIT via is-slide:
+     panel-a: slides ke atas (translateY -105%) 0.72s
+     panel-b: slides ke atas stagger +150ms 0.72s
+*/
+.pre-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: all;
 }
 
-/* ── Preloader: done → fade out cepat ── */
-.preloader-fade-leave-active {
-  transition: opacity 0.18s ease;
+/* Kedua panel: isi penuh */
+.pre-panel {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
 }
-.preloader-fade-leave-to {
-  opacity: 0;
+
+/* Panel A (foreground — gelap, ada konten di tengah) */
+.pre-panel--a {
+  z-index: 2;
+  background:
+    radial-gradient(700px 380px at 50% 45%, rgba(63, 157, 108, 0.16), transparent 65%),
+    linear-gradient(180deg, #070c0a 0%, #0a1210 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Panel B (background — sedikit lebih terang, slide stagger) */
+.pre-panel--b {
+  z-index: 1;
+  background: color-mix(in srgb, var(--accent) 12%, #070c0a);
+}
+
+/* EXIT phase: is-slide → kedua panel naik ke atas */
+.pre-wrap.is-slide .pre-panel--a {
+  animation: pre-exit-a 0.78s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+.pre-wrap.is-slide .pre-panel--b {
+  animation: pre-exit-b 0.78s cubic-bezier(0.76, 0, 0.24, 1) 0.15s forwards;
+}
+
+@keyframes pre-exit-a {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-105%); }
+}
+@keyframes pre-exit-b {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-105%); }
 }
 
 /* ── Route curtain: mini wipe per-tab ── */
