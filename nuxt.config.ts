@@ -17,6 +17,7 @@ export default defineNuxtConfig({
         { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'icon', type: 'image/svg+xml', href: '/icon.svg' },
         { rel: 'apple-touch-icon', href: '/icon.svg' },
+        { rel: 'canonical', href: 'https://jetis-sumur-web.vercel.app/' },
       ],
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -29,6 +30,10 @@ export default defineNuxtConfig({
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { property: 'og:site_name', content: 'Jetis Sumur' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:image', content: 'https://jetis-sumur-web.vercel.app/icon.svg' },
+        { name: 'twitter:card', content: 'summary' },
       ],
     },
     pageTransition: {

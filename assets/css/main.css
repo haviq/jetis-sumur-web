@@ -1030,3 +1030,20 @@ table.data tbody tr:hover td {
   border-left-color: var(--accent);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
+
+/* ══ SKELETON SHIMMER ══ */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, color-mix(in srgb, var(--accent) 8%, var(--surface)) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius);
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-text { height: 0.875rem; margin-bottom: 0.5rem; }
+.skeleton-title { height: 1.25rem; width: 60%; margin-bottom: 0.75rem; }
+.skeleton-full { width: 100%; }
+.skeleton-half { width: 50%; }
+.skeleton-third { width: 33%; }

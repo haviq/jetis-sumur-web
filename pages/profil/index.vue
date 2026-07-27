@@ -78,6 +78,14 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Profil' })
+useHead({
+  title: 'Profil',
+  meta: [
+    {
+      name: 'description',
+      content: 'Profil dan informasi Padukuhan Jetis Sumur, Sleman, DI Yogyakarta — identitas wilayah, jam layanan, dan sistem pendataan warga',
+    },
+  ],
+})
 const { site, siteTagline, siteAlamat, siteRt } = useSite()
 </script>

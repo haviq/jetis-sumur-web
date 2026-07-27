@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /ops
+Sitemap: https://jetis-sumur-web.vercel.app/sitemap.xml

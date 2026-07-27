@@ -45,68 +45,147 @@
             · {{ auth.user.nama }}
             <span v-if="auth.user.tenantId"> · {{ auth.user.tenantId }}</span>
             <span v-if="auth.user.rtScope?.length"> · RT {{ auth.user.rtScope.join(', ') }}</span>
-            · portal {{ stats?.portalPending || 0 }} · surat draft {{ stats?.suratPending || 0 }}
           </p>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <NuxtLink class="btn btn-ghost text-sm" to="/ops/cari">Cari</NuxtLink>
-          <NuxtLink class="btn btn-ghost text-sm" to="/ops/portal">Portal</NuxtLink>
-          <a class="btn btn-ghost text-sm" href="/api/print?type=pejabat" target="_blank" rel="noopener">
-            Laporan pejabat
-          </a>
-          <NuxtLink class="btn btn-primary text-sm" to="/ops/surat">Surat + QR</NuxtLink>
-        </div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-        <div v-for="s in cards" :key="s.label" class="card p-4">
-          <div class="text-xs muted">{{ s.label }}</div>
-          <div class="stat-num text-2xl mt-1">{{ formatNum(s.value) }}</div>
-        </div>
-      </div>
-
-      <div class="grid gap-4 mt-6 lg:grid-cols-3">
-        <div class="card p-5">
-          <h2 class="font-semibold mb-3">Mutasi</h2>
-          <div class="grid grid-cols-2 gap-2 text-sm">
-            <div>Masuk: <strong>{{ stats?.masuk || 0 }}</strong></div>
-            <div>Keluar: <strong>{{ stats?.keluar || 0 }}</strong></div>
-            <div>Lahir: <strong>{{ stats?.lahir || 0 }}</strong></div>
-            <div>Meninggal: <strong>{{ stats?.meninggal || 0 }}</strong></div>
-            <div>Pindah datang: <strong>{{ stats?.pindahDatang || 0 }}</strong></div>
-            <div>Pindah keluar: <strong>{{ stats?.pindahKeluar || 0 }}</strong></div>
-            <div class="col-span-2 pt-1 muted text-xs">30 hari: {{ stats?.mutasiBulanIni || 0 }}</div>
+      <!-- Loading skeleton -->
+      <div v-if="!stats" class="mt-6">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div v-for="i in 4" :key="i" class="card p-4 animate-pulse">
+            <div class="h-4 bg-gray-300 rounded w-20 mb-2"></div>
+            <div class="h-8 bg-gray-300 rounded w-16"></div>
           </div>
         </div>
-        <div class="card p-5">
-          <h2 class="font-semibold mb-3">Mutasi terbaru</h2>
-          <ul class="space-y-2 text-sm max-h-64 overflow-auto">
-            <li
-              v-for="m in stats?.recentMutasi || []"
-              :key="m.id"
-              class="border-b pb-2"
-              style="border-color: var(--border)"
-            >
-              <div class="font-medium">{{ m.nama || m.nik }} · {{ m.jenis }}</div>
-              <div class="text-xs muted">{{ m.tanggal }}</div>
-            </li>
-            <li v-if="!(stats?.recentMutasi || []).length" class="muted">Belum ada mutasi.</li>
-          </ul>
+      </div>
+
+      <div v-else>
+        <!-- Alert section -->
+        <div
+          v-if="(stats.portalPending || 0) > 0 || (stats.suratPending || 0) > 0"
+          class="mt-4 card p-4"
+          style="background: var(--emerald-bg, #d1fae5); border-color: var(--emerald, #10b981)"
+        >
+          <p class="text-sm font-medium" style="color: var(--emerald, #10b981)">
+            ⚠️ Perhatian:
+            <span v-if="stats.portalPending > 0">{{ stats.portalPending }} portal pending</span>
+            <span v-if="stats.portalPending > 0 && stats.suratPending > 0"> · </span>
+            <span v-if="stats.suratPending > 0">{{ stats.suratPending }} surat draft</span>
+          </p>
         </div>
-        <div class="card p-5">
-          <h2 class="font-semibold mb-3">Aktivitas terbaru</h2>
-          <ul class="space-y-2 text-sm max-h-64 overflow-auto">
-            <li
-              v-for="l in stats?.recentLogs || []"
-              :key="l.id"
-              class="border-b pb-2"
-              style="border-color: var(--border)"
-            >
-              <div class="font-medium">{{ l.human || l.aktivitas }}</div>
-              <div class="text-xs muted">{{ l.user }} · {{ l.waktu }}</div>
-            </li>
-            <li v-if="!(stats?.recentLogs || []).length" class="muted">Belum ada log.</li>
-          </ul>
+
+        <!-- Stats grid 4 kartu -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+          <div class="card p-4">
+            <div class="text-xs muted">Total Jiwa</div>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-2xl">👥</span>
+              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.totalPenduduk) }}</span>
+            </div>
+          </div>
+          <div class="card p-4">
+            <div class="text-xs muted">Total KK</div>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-2xl">🏠</span>
+              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.totalKk) }}</span>
+            </div>
+          </div>
+          <div class="card p-4">
+            <div class="text-xs muted">Surat Pending</div>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-2xl">📄</span>
+              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.suratPending) }}</span>
+            </div>
+          </div>
+          <div class="card p-4">
+            <div class="text-xs muted">Portal Pending</div>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-2xl">📥</span>
+              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.portalPending) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="mt-6">
+          <h2 class="font-semibold mb-3">Aksi Cepat</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <NuxtLink class="card p-4 hover:shadow-md transition-shadow" to="/ops/keluarga">
+              <div class="text-2xl mb-2">➕</div>
+              <div class="font-medium text-sm">Tambah KK</div>
+            </NuxtLink>
+            <NuxtLink class="card p-4 hover:shadow-md transition-shadow" to="/ops/surat">
+              <div class="text-2xl mb-2">✍️</div>
+              <div class="font-medium text-sm">Buat Surat</div>
+            </NuxtLink>
+            <NuxtLink class="card p-4 hover:shadow-md transition-shadow" to="/ops/portal">
+              <div class="text-2xl mb-2">👁️</div>
+              <div class="font-medium text-sm">Lihat Portal</div>
+            </NuxtLink>
+            <a class="card p-4 hover:shadow-md transition-shadow" href="/api/export?type=warga" target="_blank">
+              <div class="text-2xl mb-2">📊</div>
+              <div class="font-medium text-sm">Export CSV</div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Grafik mini distribusi per RT -->
+        <div class="card p-5 mt-6">
+          <h2 class="font-semibold mb-4">Distribusi per RT</h2>
+          <div class="space-y-3">
+            <div v-for="rt in stats.perRt || []" :key="rt.rt" class="flex items-center gap-3">
+              <div class="text-sm font-medium w-12">RT {{ rt.rt }}</div>
+              <div class="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden relative">
+                <div
+                  class="h-full rounded-full flex items-center justify-end px-2 text-xs font-medium text-white transition-all"
+                  :style="{
+                    width: maxRtJiwa > 0 ? `${(rt.jiwa / maxRtJiwa) * 100}%` : '0%',
+                    background: 'var(--accent, #3b82f6)',
+                    minWidth: rt.jiwa > 0 ? '40px' : '0',
+                  }"
+                >
+                  {{ rt.jiwa }}
+                </div>
+              </div>
+              <div class="text-xs muted w-16 text-right">{{ rt.kk }} KK</div>
+            </div>
+            <div v-if="!(stats.perRt || []).length" class="muted text-sm">Belum ada data RT.</div>
+          </div>
+        </div>
+
+        <!-- Activity feed -->
+        <div class="grid gap-4 mt-6 lg:grid-cols-2">
+          <div class="card p-5">
+            <h2 class="font-semibold mb-3">Aktivitas Terbaru</h2>
+            <ul class="space-y-2 text-sm max-h-64 overflow-auto">
+              <li
+                v-for="l in logs"
+                :key="l.id"
+                class="border-b pb-2"
+                style="border-color: var(--border)"
+              >
+                <div class="font-medium">{{ l.human || l.aktivitas }}</div>
+                <div class="text-xs muted">{{ l.user }} · {{ l.waktu }}</div>
+              </li>
+              <li v-if="!logs.length" class="muted">Belum ada log aktivitas.</li>
+            </ul>
+          </div>
+
+          <div class="card p-5">
+            <h2 class="font-semibold mb-3">Mutasi Terbaru</h2>
+            <ul class="space-y-2 text-sm max-h-64 overflow-auto">
+              <li
+                v-for="m in stats.recentMutasi || []"
+                :key="m.id"
+                class="border-b pb-2"
+                style="border-color: var(--border)"
+              >
+                <div class="font-medium">{{ m.nama || m.nik }} · {{ m.jenis }}</div>
+                <div class="text-xs muted">{{ m.tanggal }}</div>
+              </li>
+              <li v-if="!(stats.recentMutasi || []).length" class="muted">Belum ada mutasi.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -122,6 +201,7 @@ const form = reactive({ username: '', password: '' })
 const loading = ref(false)
 const error = ref('')
 const stats = ref<any>(null)
+const logs = ref<any[]>([])
 
 function formatNum(v: any) {
   const n = Number(v)
@@ -131,16 +211,22 @@ function formatNum(v: any) {
 
 async function loadStats() {
   if (!auth.user) return
-  const res = await $fetch<{ ok: boolean; stats: any }>('/api/stats?admin=1')
-  stats.value = res.stats
+  try {
+    const [statsRes, logsRes] = await Promise.all([
+      $fetch<{ ok: boolean; stats: any }>('/api/stats?admin=1'),
+      $fetch<{ ok: boolean; items: any[] }>('/api/logs').catch(() => ({ ok: true, items: [] })),
+    ])
+    stats.value = statsRes.stats
+    logs.value = (logsRes.items || []).slice(0, 5)
+  } catch (e) {
+    console.error('Failed to load stats:', e)
+  }
 }
 
-const cards = computed(() => [
-  { label: 'Penduduk', value: stats.value?.totalPenduduk },
-  { label: 'KK', value: stats.value?.totalKk },
-  { label: 'Laki-laki', value: stats.value?.laki },
-  { label: 'Perempuan', value: stats.value?.perempuan },
-])
+const maxRtJiwa = computed(() => {
+  if (!stats.value?.perRt) return 0
+  return Math.max(...stats.value.perRt.map((rt: any) => rt.jiwa || 0), 1)
+})
 
 const roleLabel = computed(() => {
   const r = auth.user?.role

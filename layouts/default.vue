@@ -156,11 +156,11 @@ const PRELOADER_KEY = 'jetis-preloader-v4'
 
 const links = [
   { to: '/', label: 'Beranda' },
-  { to: '/profil', label: 'Profil' },
-  { to: '/struktur', label: 'Struktur' },
   { to: '/statistik', label: 'Statistik' },
-  { to: '/berita', label: 'Berita' },
   { to: '/layanan', label: 'Layanan' },
+  { to: '/berita', label: 'Berita' },
+  { to: '/struktur', label: 'Struktur' },
+  { to: '/profil', label: 'Profil' },
   { to: '/kontak', label: 'Kontak' },
 ]
 

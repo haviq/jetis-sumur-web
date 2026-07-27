@@ -192,7 +192,15 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Layanan Padukuhan' })
+useHead({
+  title: 'Layanan',
+  meta: [
+    {
+      name: 'description',
+      content: 'Layanan administrasi dan surat keterangan Padukuhan Jetis Sumur — ajukan online, pantau status, dan perbarui data kependudukan tanpa antre',
+    },
+  ],
+})
 
 const services = [
   {

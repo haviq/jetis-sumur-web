@@ -28,6 +28,10 @@
           <option value="pindah">Pindah</option>
           <option value="meninggal">Meninggal</option>
         </select>
+        <select v-model="filterRt" class="input max-w-[10rem]" @change="load">
+          <option value="">Semua RT</option>
+          <option v-for="rt in rtList" :key="rt" :value="rt">RT {{ rt }}</option>
+        </select>
         <button class="btn btn-ghost" type="button" @click="load">Cari</button>
         <button
           v-if="selected.length"
@@ -47,7 +51,8 @@
         </button>
       </div>
 
-      <div class="card mt-4 overflow-hidden">
+      <!-- Desktop table -->
+      <div class="card mt-4 overflow-hidden hidden md:block">
         <div class="table-wrap">
           <table class="data">
             <thead>
@@ -78,10 +83,40 @@
                   <button class="text-xs" style="color: var(--danger)" type="button" @click="remove(w)">Hapus</button>
                 </td>
               </tr>
-              <tr v-if="!items.length"><td colspan="6" class="muted">Tidak ada data</td></tr>
+              <tr v-if="!items.length"><td colspan="7" class="muted">Tidak ada data</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Mobile card list -->
+      <div class="md:hidden mt-4 space-y-3">
+        <div v-for="w in items" :key="w.id" class="card p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <input v-model="selected" type="checkbox" :value="w.id" />
+                <h3 class="font-semibold text-base">{{ w.nama }}</h3>
+              </div>
+              <p class="font-mono text-xs muted mb-2">{{ w.nik }}</p>
+              <div class="flex flex-wrap gap-2 mb-2">
+                <span class="badge text-xs">RT {{ getWargaRt(w) }}</span>
+                <span class="badge text-xs">{{ w.status }}</span>
+                <span class="text-xs muted">{{ w.jk }}</span>
+                <span class="text-xs muted">{{ w.hubunganKk }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-2 pt-2" style="border-top: 1px solid var(--border)">
+            <button class="text-sm flex-1" style="color: var(--accent)" type="button" @click="openForm(w)">
+              ✏️ Ubah
+            </button>
+            <button class="text-sm flex-1" style="color: var(--danger)" type="button" @click="remove(w)">
+              🗑️ Hapus
+            </button>
+          </div>
+        </div>
+        <div v-if="!items.length" class="card p-4 muted text-center">Tidak ada data</div>
       </div>
 
       <div v-if="show" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style="background: rgba(0,0,0,.55)">
@@ -162,10 +197,13 @@ const items = ref<any[]>([])
 const selected = ref<string[]>([])
 const q = ref('')
 const status = ref('')
+const filterRt = ref('')
 const show = ref(false)
 const err = ref('')
 const importMsg = ref('')
 const importOk = ref(true)
+const kkMap = ref<Map<string, any>>(new Map())
+const rtList = ref<string[]>([])
 const allSelected = computed(
   () => items.value.length > 0 && selected.value.length === items.value.length,
 )
@@ -202,8 +240,8 @@ const form = reactive({
   nik: '',
   nama: '',
   nomorKk: '',
-  jk: 'L',
-  hubunganKk: 'Lainnya',
+  jk: 'L' as 'L' | 'P',
+  hubunganKk: 'Kepala Keluarga',
   tanggalLahir: '',
   agama: '',
   pendidikan: '',
@@ -212,41 +250,70 @@ const form = reactive({
   noHp: '',
 })
 
+function getWargaRt(w: any): string {
+  const kk = kkMap.value.get(w.nomorKk)
+  return kk?.rt || '—'
+}
+
 async function load() {
-  if (!auth.user) return
-  const res = await $fetch<{ ok: boolean; items: any[] }>('/api/warga', {
-    query: { q: q.value || undefined, status: status.value || undefined },
-  })
-  items.value = res.items || []
-  selected.value = []
+  try {
+    const params = new URLSearchParams()
+    if (q.value) params.set('q', q.value)
+    if (status.value) params.set('status', status.value)
+    if (filterRt.value) params.set('rt', filterRt.value)
+    const url = `/api/warga?${params.toString()}`
+    const res = await $fetch<{ ok: boolean; items: any[] }>(url)
+    items.value = res.items || []
+
+    // Load KK data for RT mapping
+    const kkRes = await $fetch<{ ok: boolean; items: any[] }>('/api/keluarga')
+    kkMap.value = new Map((kkRes.items || []).map((k) => [k.nomorKk, k]))
+    const rts = Array.from(new Set((kkRes.items || []).map((k) => k.rt))).sort()
+    rtList.value = rts
+  } catch (e) {
+    console.error('Failed to load:', e)
+  }
 }
 
 function openForm(w?: any) {
+  if (w) {
+    Object.assign(form, {
+      id: w.id,
+      nik: w.nik,
+      nama: w.nama,
+      nomorKk: w.nomorKk,
+      jk: w.jk,
+      hubunganKk: w.hubunganKk,
+      tanggalLahir: w.tanggalLahir || '',
+      agama: w.agama || '',
+      pendidikan: w.pendidikan || '',
+      pekerjaan: w.pekerjaan || '',
+      status: w.status,
+      noHp: w.noHp || '',
+    })
+  } else {
+    form.id = ''
+    form.nik = ''
+    form.nama = ''
+    form.nomorKk = ''
+    form.jk = 'L'
+    form.hubunganKk = 'Kepala Keluarga'
+    form.tanggalLahir = ''
+    form.agama = ''
+    form.pendidikan = ''
+    form.pekerjaan = ''
+    form.status = 'aktif'
+    form.noHp = ''
+  }
   err.value = ''
-  Object.assign(form, {
-    id: w?.id || '',
-    nik: w?.nik || '',
-    nama: w?.nama || '',
-    nomorKk: w?.nomorKk || '',
-    jk: w?.jk || 'L',
-    hubunganKk: w?.hubunganKk || 'Lainnya',
-    tanggalLahir: w?.tanggalLahir || '',
-    agama: w?.agama || '',
-    pendidikan: w?.pendidikan || '',
-    pekerjaan: w?.pekerjaan || '',
-    status: w?.status || 'aktif',
-    noHp: w?.noHp || '',
-  })
   show.value = true
 }
 
 async function save() {
   err.value = ''
   try {
-    await $fetch('/api/warga', {
-      method: 'POST',
-      body: { ...form, id: form.id || undefined },
-    })
+    const body = { ...form }
+    await $fetch('/api/warga', { method: 'POST', body })
     show.value = false
     await load()
   } catch (e: any) {
@@ -256,12 +323,19 @@ async function save() {
 
 async function remove(w: any) {
   if (!confirm(`Hapus ${w.nama}?`)) return
-  await $fetch('/api/warga', { method: 'POST', body: { action: 'delete', id: w.id } })
-  await load()
+  try {
+    await $fetch(`/api/warga`, {
+      method: 'POST',
+      body: { id: w.id, _action: 'delete' },
+    })
+    await load()
+  } catch (e: any) {
+    alert(e?.data?.statusMessage || 'Gagal hapus')
+  }
 }
 
-async function onImport(ev: Event) {
-  const input = ev.target as HTMLInputElement
+async function onImport(e: Event) {
+  const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
   importMsg.value = 'Mengimpor…'
