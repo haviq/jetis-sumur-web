@@ -64,7 +64,7 @@
             style="background: var(--accent-dim); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border))"
           >JS</span>
           <div class="min-w-0">
-            <div class="truncate text-sm font-bold leading-tight">{{ site.shortName }}</div>
+            <div class="truncate text-sm font-bold leading-tight">{{ siteName }}</div>
             <div class="truncate text-[11px] muted">Pendataan Warga</div>
           </div>
         </NuxtLink>

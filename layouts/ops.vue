@@ -31,16 +31,50 @@
         </div>
       </div>
 
-      <nav v-if="auth.user" class="container-page ops-nav-scroll" aria-label="Menu ops">
-        <NuxtLink
-          v-for="t in tabs"
-          :key="t.to"
-          :to="t.to"
-          class="nav-link"
-          :class="{ 'router-link-active': isActive(t.to) }"
-        >
-          {{ t.label }}
-        </NuxtLink>
+      <!-- Tab strip: scroll horizontal di semua viewport, separator antar group di desktop -->
+      <nav v-if="auth.user" class="container-page ops-nav-wrap" aria-label="Menu ops">
+        <div class="ops-nav-scroll">
+          <!-- Group: Ringkasan + Cari -->
+          <NuxtLink to="/ops" class="nav-link" :class="{ 'router-link-active': isActive('/ops') }">Ringkasan</NuxtLink>
+          <NuxtLink to="/ops/cari" class="nav-link" :class="{ 'router-link-active': isActive('/ops/cari') }">Cari</NuxtLink>
+
+          <!-- Separator: Data -->
+          <span class="ops-nav-sep" aria-hidden="true"></span>
+
+          <!-- Group: Data -->
+          <NuxtLink to="/ops/kk" class="nav-link" :class="{ 'router-link-active': isActive('/ops/kk') }">KK</NuxtLink>
+          <NuxtLink to="/ops/warga" class="nav-link" :class="{ 'router-link-active': isActive('/ops/warga') }">Warga</NuxtLink>
+          <NuxtLink to="/ops/mutasi" class="nav-link" :class="{ 'router-link-active': isActive('/ops/mutasi') }">Mutasi</NuxtLink>
+          <NuxtLink to="/ops/surat" class="nav-link" :class="{ 'router-link-active': isActive('/ops/surat') }">Surat</NuxtLink>
+
+          <!-- Separator: Manajemen -->
+          <span class="ops-nav-sep" aria-hidden="true"></span>
+
+          <!-- Group: Manajemen -->
+          <NuxtLink to="/ops/portal" class="nav-link" :class="{ 'router-link-active': isActive('/ops/portal') }">Portal</NuxtLink>
+          <NuxtLink to="/ops/agenda" class="nav-link" :class="{ 'router-link-active': isActive('/ops/agenda') }">Agenda</NuxtLink>
+          <NuxtLink to="/ops/peta" class="nav-link" :class="{ 'router-link-active': isActive('/ops/peta') }">Peta</NuxtLink>
+          <NuxtLink to="/ops/laporan" class="nav-link" :class="{ 'router-link-active': isActive('/ops/laporan') }">Laporan</NuxtLink>
+          <NuxtLink to="/ops/dashboard-rt" class="nav-link" :class="{ 'router-link-active': isActive('/ops/dashboard-rt') }">Dashboard RT</NuxtLink>
+
+          <!-- Separator + Group: Admin (hanya admin+) -->
+          <template v-if="auth.isAdmin">
+            <span class="ops-nav-sep" aria-hidden="true"></span>
+            <NuxtLink to="/ops/import" class="nav-link" :class="{ 'router-link-active': isActive('/ops/import') }">Import</NuxtLink>
+            <NuxtLink to="/ops/backup" class="nav-link" :class="{ 'router-link-active': isActive('/ops/backup') }">Backup</NuxtLink>
+            <NuxtLink to="/ops/master" class="nav-link" :class="{ 'router-link-active': isActive('/ops/master') }">Master</NuxtLink>
+            <NuxtLink to="/ops/log" class="nav-link" :class="{ 'router-link-active': isActive('/ops/log') }">Audit</NuxtLink>
+            <NuxtLink to="/ops/laporan-pejabat" class="nav-link" :class="{ 'router-link-active': isActive('/ops/laporan-pejabat') }">Rek. Pejabat</NuxtLink>
+            <NuxtLink to="/ops/notifikasi" class="nav-link" :class="{ 'router-link-active': isActive('/ops/notifikasi') }">Notif</NuxtLink>
+          </template>
+
+          <!-- Separator + Group: Super (hanya super_admin) -->
+          <template v-if="auth.isSuper">
+            <span class="ops-nav-sep" aria-hidden="true"></span>
+            <NuxtLink to="/ops/akun" class="nav-link" :class="{ 'router-link-active': isActive('/ops/akun') }">Pengguna</NuxtLink>
+            <NuxtLink to="/ops/onboard" class="nav-link" :class="{ 'router-link-active': isActive('/ops/onboard') }">Onboard</NuxtLink>
+          </template>
+        </div>
       </nav>
     </div>
 
@@ -67,41 +101,6 @@ const roleBadgeClass = computed(() => {
   if (r === 'super_admin') return 'badge-role--super'
   if (r === 'admin') return 'badge-role--admin'
   return 'badge-role--padukuhan'
-})
-
-/**
- * Menu per role (UI mirror of server canAccess):
- * - padukuhan: data harian + surat/print (tanpa import/backup/master/audit/users)
- * - admin: + import, backup, master, audit
- * - super_admin: + pengguna
- */
-const tabs = computed(() => {
-  const base = [
-    { to: '/ops', label: 'Ringkasan' },
-    { to: '/ops/cari', label: 'Cari' },
-    { to: '/ops/kk', label: 'KK' },
-    { to: '/ops/warga', label: 'Warga' },
-    { to: '/ops/mutasi', label: 'Mutasi' },
-    { to: '/ops/surat', label: 'Surat' },
-    { to: '/ops/portal', label: 'Portal' },
-    { to: '/ops/agenda', label: 'Agenda' },
-    { to: '/ops/peta', label: 'Peta' },
-    { to: '/ops/dashboard-rt', label: 'Dashboard RT' },
-    { to: '/ops/laporan', label: 'Laporan' },
-  ]
-  if (auth.isAdmin) {
-    base.push(
-      { to: '/ops/import', label: 'Import' },
-      { to: '/ops/backup', label: 'Backup' },
-      { to: '/ops/master', label: 'Master' },
-      { to: '/ops/log', label: 'Audit' },
-      { to: '/ops/notifikasi', label: 'Notif' },
-    )
-  }
-  if (auth.isSuper) {
-    base.push({ to: '/ops/akun', label: 'Pengguna' })
-  }
-  return base
 })
 
 function isActive(to: string) {
