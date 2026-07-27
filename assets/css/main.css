@@ -734,11 +734,11 @@ table.data tbody tr:hover td {
 }
 
 /* ══ PRELOADER DUAL-CURTAIN (haviq.dev pattern) ══
-   pre-wrap: container full viewport, pointer-events all
-   pre-panel--a: fg (dark, konten), pre-panel--b: bg (accent-tinted)
+   pre-wrap: container full viewport, pointer-events none
+   ENTER: panel-b naik dari bawah (stagger 0ms), panel-a naik dari bawah (stagger +100ms)
    EXIT via is-slide:
-     panel-a: slides ke atas (translateY -105%) 0.72s
-     panel-b: slides ke atas stagger +150ms 0.72s
+     panel-a: slide ke atas (-105%) 0.78s
+     panel-b: slide ke atas (-105%) stagger +150ms 0.78s
 */
 .pre-wrap {
   position: fixed;
@@ -747,7 +747,7 @@ table.data tbody tr:hover td {
   pointer-events: none;
 }
 
-/* Kedua panel: isi penuh */
+/* Kedua panel: isi penuh, ENTER dari bawah */
 .pre-panel {
   position: absolute;
   inset: 0;
@@ -763,15 +763,27 @@ table.data tbody tr:hover td {
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: pre-enter-a 0.72s cubic-bezier(0.76, 0, 0.24, 1) 0.08s both;
 }
 
-/* Panel B (background — sedikit lebih terang, slide stagger) */
+/* Panel B (background — sedikit lebih terang, enter lebih cepat) */
 .pre-panel--b {
   z-index: 1;
   background: color-mix(in srgb, var(--accent) 12%, #070c0a);
+  animation: pre-enter-b 0.72s cubic-bezier(0.76, 0, 0.24, 1) both;
 }
 
-/* EXIT phase: is-slide → kedua panel naik ke atas, non-interaktif */
+/* ENTER animations: naik dari bawah menutup layar */
+@keyframes pre-enter-a {
+  from { transform: translateY(105%); }
+  to   { transform: translateY(0); }
+}
+@keyframes pre-enter-b {
+  from { transform: translateY(105%); }
+  to   { transform: translateY(0); }
+}
+
+/* EXIT phase: is-slide → kedua panel keluar ke bawah */
 .pre-wrap.is-slide .pre-panel--a {
   animation: pre-exit-a 0.78s cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
@@ -788,7 +800,10 @@ table.data tbody tr:hover td {
   to   { transform: translateY(-105%); }
 }
 
-/* ── Route curtain: mini wipe per-tab ── */
+/* ── Route curtain: smooth wipe per-tab ─────────────────────────────
+   Masuk dari atas ke bawah (menutup layar),
+   lalu keluar dari bawah ke atas (reveal konten baru).
+   Total: 0.62s — assez pendek buat tab-switch ─────────────────────── */
 .route-curtain {
   position: fixed;
   inset: 0;
@@ -799,18 +814,19 @@ table.data tbody tr:hover td {
     color-mix(in srgb, var(--bg) 97%, var(--accent)) 0%,
     var(--bg) 100%
   );
-  transform: translateY(-100%);
+  transform: translateY(-105%);
   will-change: transform;
 }
 .route-curtain.is-active {
-  animation: curtain-wipe 0.5s cubic-bezier(0.76, 0, 0.24, 1) both;
+  animation: curtain-wipe 0.62s cubic-bezier(0.76, 0, 0.24, 1) both;
   pointer-events: none;
 }
 @keyframes curtain-wipe {
-  0%   { transform: translateY(-100%); }
-  40%  { transform: translateY(0%); }
-  41%  { transform: translateY(100%); }
-  100% { transform: translateY(-100%); }
+  /* Masuk: turun dari atas ke posisi 0 (menutup) */
+  0%   { transform: translateY(-105%); }
+  45%  { transform: translateY(0%); }
+  /* Keluar: naik ke atas */
+  100% { transform: translateY(-105%); }
 }
 
 /* ── Hero section ── */

@@ -152,7 +152,7 @@ const typedChars = computed(() => TYPE_TEXT.slice(0, typedLen.value).split(''))
 const curtainActive = ref(false)
 let curtainTimer: ReturnType<typeof setTimeout> | null = null
 
-const PRELOADER_KEY = 'jetis-preloader-v4'
+const PRELOADER_KEY = 'jetis-preloader-v5'
 
 const links = [
   { to: '/', label: 'Beranda' },
@@ -203,6 +203,9 @@ async function runPreloader() {
   phase.value = 'typing'
   typedLen.value = 0
   typingDone.value = false
+
+  // Tunggu panel enter animation selesai (panel-b 0.72s + panel-a 0.08s stagger)
+  await sleep(820)
 
   // Tampilkan semua char langsung, animasi reveal via CSS stagger
   typedLen.value = TYPE_TEXT.length
