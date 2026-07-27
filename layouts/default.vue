@@ -118,11 +118,11 @@
     <footer class="border-t mt-14 relative z-10" style="border-color: var(--border)">
       <div class="container-page py-9 grid gap-6 sm:grid-cols-2">
         <div>
-          <div class="font-display text-lg font-bold">{{ site.name }}</div>
-          <p class="muted text-sm mt-1.5 max-w-md">{{ site.tagline }}</p>
+          <div class="font-display text-lg font-bold">{{ siteName }}</div>
+          <p class="muted text-sm mt-1.5 max-w-md">{{ siteTagline }}</p>
         </div>
         <div class="text-sm muted sm:text-right space-y-1">
-          <div>{{ site.alamat }}</div>
+          <div>{{ siteAlamat }}</div>
           <div>{{ site.jamLayanan }}</div>
           <div class="text-xs pt-2">
             Data pribadi warga tidak ditampilkan di website publik.
@@ -135,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-const site = useSite()
+const { site, siteName, siteTagline, siteAlamat } = useSite()
 const open = ref(false)
 const lastToggle = ref(0)
 const theme = ref<'dark' | 'light'>('dark')

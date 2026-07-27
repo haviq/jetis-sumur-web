@@ -169,7 +169,8 @@
 definePageMeta({ layout: 'ops' })
 useHead({ title: 'Ops · KK' })
 const auth = useAuthStore()
-const site = useSite()
+const { site } = useSite()
+const rtList = computed(() => site.value.siteRt?.length ? site.value.siteRt : ['01','02','03','04'])
 const route = useRoute()
 const items = ref<any[]>([])
 const q = ref('')
@@ -177,7 +178,6 @@ const rt = ref('')
 const show = ref(false)
 const err = ref('')
 const importMsg = ref('')
-const importOk = ref(true)
 const detail = ref<{
   kk: any
   warga: any[]
@@ -185,7 +185,6 @@ const detail = ref<{
   surat?: any[]
   stats?: any
 } | null>(null)
-const rtList = site.rtList
 const form = reactive({
   id: '',
   nomorKk: '',
