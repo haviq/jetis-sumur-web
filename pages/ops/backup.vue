@@ -8,7 +8,7 @@
           <p class="text-sm muted mt-1">Export JSON penuh + restore merge/replace (admin).</p>
         </div>
         <div class="flex gap-2 flex-wrap">
-          <a class="btn btn-primary text-sm" href="/api/backup" target="_blank" rel="noopener">⬇ Download backup</a>
+          <a class="btn btn-primary text-sm" href="/api/backup" download>⬇ Download backup lokal</a>
           <button class="btn btn-ghost text-sm" type="button" :disabled="gBusy" @click="backupToGDrive">
             {{ gBusy ? 'Mengupload…' : '☁ Backup ke Google Drive' }}
           </button>

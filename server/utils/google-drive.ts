@@ -74,10 +74,9 @@ async function ensureFolder(token: string): Promise<string> {
   return folder.id
 }
 
-/** Upload JSON backup ke Google Drive, return file URL */
-export async function uploadBackupToDrive(bundle: unknown): Promise<{ fileId: string; fileName: string; url: string }> {
+/** Upload JSON backup ke Google Drive ke folder yang sudah di-share ke service account */
+export async function uploadBackupToDrive(bundle: unknown, folderId: string): Promise<{ fileId: string; fileName: string; url: string }> {
   const token = await getDriveToken()
-  const folderId = await ensureFolder(token)
 
   const fileName = `jetis-backup-${new Date().toISOString().slice(0, 16).replace('T', '_')}.json`
   const content = JSON.stringify(bundle, null, 2)

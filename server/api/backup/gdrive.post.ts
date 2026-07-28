@@ -12,7 +12,16 @@ export default defineEventHandler(async (event) => {
   await ensureHydrated()
   const bundle = exportBackupBundle()
 
-  const result = await uploadBackupToDrive(bundle)
+  // Ambil folder ID dari env — wajib diset agar upload ke Drive personal, bukan Drive SA
+  const folderId = (process.env.GOOGLE_DRIVE_FOLDER_ID || '').trim()
+  if (!folderId) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'GOOGLE_DRIVE_FOLDER_ID belum diset. Share folder Drive ke service account lalu set env ini.',
+    })
+  }
+
+  const result = await uploadBackupToDrive(bundle, folderId)
   addLog(user.username, 'backup_gdrive', `file: ${result.fileName}`)
 
   return {
