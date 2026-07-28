@@ -32,13 +32,31 @@
                 <td class="text-xs font-mono">{{ (a.rtScope || []).join(', ') || '—' }}</td>
                 <td>{{ a.status }}</td>
                 <td class="text-xs muted">{{ a.lastLogin || '—' }}</td>
-                <td>
+                <td class="flex gap-3">
                   <button class="text-xs" style="color: var(--accent)" type="button" @click="open(a)">Ubah</button>
+                  <button class="text-xs" style="color: #f87171" type="button" @click="openReset(a)">Reset PW</button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Modal Reset Password -->
+      <div v-if="showReset" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,.55)">
+        <form class="card w-full max-w-sm p-5 space-y-3" @submit.prevent="doReset">
+          <h2 class="font-semibold">Reset Password</h2>
+          <p class="text-sm muted">Akun: <strong>{{ resetTarget?.username }}</strong></p>
+          <div>
+            <label class="label">Password baru</label>
+            <input v-model="resetPassword" type="password" class="input" required minlength="6" placeholder="Min. 6 karakter" />
+          </div>
+          <p v-if="resetError" class="text-xs" style="color:#f87171">{{ resetError }}</p>
+          <div class="flex justify-end gap-2">
+            <button type="button" class="btn btn-ghost" @click="showReset = false">Batal</button>
+            <button type="submit" class="btn btn-primary" style="background:#f87171">Reset</button>
+          </div>
+        </form>
       </div>
 
       <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(0,0,0,.55)">
@@ -92,6 +110,32 @@ useHead({ title: 'Ops · Akun' })
 const auth = useAuthStore()
 const items = ref<any[]>([])
 const show = ref(false)
+const showReset = ref(false)
+const resetTarget = ref<any>(null)
+const resetPassword = ref('')
+const resetError = ref('')
+
+function openReset(a: any) {
+  resetTarget.value = a
+  resetPassword.value = ''
+  resetError.value = ''
+  showReset.value = true
+}
+
+async function doReset() {
+  resetError.value = ''
+  try {
+    await $fetch('/api/akun/reset-password', {
+      method: 'POST',
+      body: { id: resetTarget.value.id, password: resetPassword.value },
+    })
+    showReset.value = false
+  } catch (e: any) {
+    const msg = e?.data?.statusMessage || e?.message || 'Gagal reset password'
+    resetError.value = msg === 'password_too_short' ? 'Password minimal 6 karakter' : msg
+  }
+}
+
 const form = reactive({
   id: '',
   nama: '',
