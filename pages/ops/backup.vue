@@ -9,8 +9,8 @@
         </div>
         <div class="flex gap-2 flex-wrap">
           <a class="btn btn-primary text-sm" href="/api/backup" download>⬇ Download backup lokal</a>
-          <button class="btn btn-ghost text-sm" type="button" :disabled="gBusy" @click="backupToGDrive">
-            {{ gBusy ? 'Mengupload…' : '☁ Backup ke Google Drive' }}
+          <button class="btn btn-ghost text-sm" type="button" :disabled="gBusy" @click="backupToSheets">
+            {{ gBusy ? 'Menyimpan…' : '📊 Backup ke Google Sheets' }}
           </button>
         </div>
       </div>
@@ -82,18 +82,21 @@ const gBusy = ref(false)
 const gResult = ref<{ fileName: string; url: string } | null>(null)
 const gError = ref('')
 
-async function backupToGDrive() {
+async function backupToSheets() {
   gBusy.value = true
   gResult.value = null
   gError.value = ''
   try {
-    const res = await $fetch<{ ok: boolean; fileName: string; fileId: string; url: string }>(
-      '/api/backup/gdrive',
+    const res = await $fetch<{ ok: boolean; timestamp: string; rowCount: number }>(
+      '/api/backup/sheets',
       { method: 'POST' },
     )
-    gResult.value = { fileName: res.fileName, url: res.url }
+    gResult.value = {
+      fileName: `Tersimpan di sheet "backup" · ${res.rowCount} entri`,
+      url: `https://docs.google.com/spreadsheets/d/${res.spreadsheetId}`,
+    }
   } catch (e: any) {
-    gError.value = e?.data?.statusMessage || e?.message || 'Gagal upload ke Google Drive'
+    gError.value = e?.data?.statusMessage || e?.message || 'Gagal backup ke Sheets'
   } finally {
     gBusy.value = false
   }
