@@ -43,7 +43,7 @@
           <div class="stats-card reveal reveal-d2">
             <div class="stats-card__header">
               <span class="font-semibold text-sm">Ringkasan penduduk</span>
-              <span class="badge badge--mode">{{ stats?.mode || 'live' }}</span>
+              <span class="badge badge--mode">{{ stats?.mode === 'SHEETS' ? 'Google Sheets' : (stats?.mode || 'live') }}</span>
             </div>
 
             <div class="stats-card__grid">
@@ -164,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'Beranda · Jetis Sumur' })
+useHead({ title: 'Beranda' })
 
 const { data } = await useFetch<{ ok: boolean; stats: any }>('/api/stats')
 const stats = computed(() => data.value?.stats)

@@ -4,12 +4,12 @@
   "productName": "Data Warga Jetis Sumur",
   "tagline": "Buku data KK & jiwa padukuhan — diweb, di spreadsheet, dipakai perangkat.",
   "subtitle": "Padukuhan Jetis Sumur",
-  "alamat": "Padukuhan Jetis Sumur (lengkapi kalurahan/kapanewon saat data resmi tersedia)",
+  "alamat": "Padukuhan Jetis Sumur, Sendangtirto, Berbah, Sleman, D.I. Yogyakarta",
   "wilayah": {
     "padukuhan": "Jetis Sumur",
-    "kalurahan": "TBA",
-    "kapanewon": "TBA",
-    "kabupaten": "TBA",
+    "kalurahan": "Sendangtirto",
+    "kapanewon": "Berbah",
+    "kabupaten": "Sleman",
     "provinsi": "DI Yogyakarta"
   },
   "rtList": ["01", "02", "03", "04"],

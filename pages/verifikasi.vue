@@ -39,7 +39,12 @@ onMounted(async () => {
   try {
     data.value = await $fetch('/api/verify', { query: { token: t } })
   } catch (e: any) {
-    error.value = e?.data?.statusMessage || 'Surat tidak ditemukan / dibatalkan'
+    const raw = e?.data?.statusMessage || e?.data?.message || ''
+    const errorMap: Record<string, string> = {
+      surat_not_found: 'Surat dengan kode ini tidak ditemukan. Pastikan kode QR terbaca dengan benar.',
+      unauthorized: 'Token tidak valid atau sudah kedaluwarsa.',
+    }
+    error.value = errorMap[raw] ?? (raw || 'Surat tidak ditemukan / dibatalkan')
   } finally {
     loading.value = false
   }

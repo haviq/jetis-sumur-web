@@ -46,6 +46,13 @@
             <span class="text-right font-semibold tabular-nums">{{ r.jiwa }}</span>
           </div>
         </div>
+        <!-- BUG-004: tampilkan warga tanpa data RT -->
+        <p
+          v-if="stats?.tanpaRt && stats.tanpaRt > 0"
+          class="mt-3 text-xs muted"
+        >
+          ⚠ {{ stats.tanpaRt }} jiwa tidak memiliki data RT
+        </p>
       </div>
 
       <!-- Kelompok umur -->

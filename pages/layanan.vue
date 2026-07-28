@@ -245,6 +245,10 @@ const steps = [
 const activeSection = ref<string | null>(null)
 
 function handleCTA(id: string) {
+  // BUG-015: reset cek-status state when opening a new form
+  statusResult.value = null
+  statusMsg.value = ''
+  statusId.value = ''
   if (id === 'status') {
     activeSection.value = null
     scrollToStatus()
@@ -325,7 +329,12 @@ async function cekStatus() {
       statusMsg.value = 'Data tidak ditemukan. Periksa kembali kode ID Anda.'
     }
   } catch (e: any) {
-    statusMsg.value = e?.data?.statusMessage || 'Gagal mengambil data. Periksa kembali kode ID.'
+    const raw = e?.data?.statusMessage || e?.data?.message || ''
+    const errMap: Record<string, string> = {
+      unauthorized: 'Kode tidak ditemukan atau akses ditolak. Pastikan kode pengajuan benar.',
+      not_found: 'Pengajuan dengan kode ini tidak ditemukan.',
+    }
+    statusMsg.value = errMap[raw] ?? (raw || 'Gagal mengambil data. Periksa kembali kode ID.')
   } finally {
     statusBusy.value = false
   }

@@ -41,7 +41,7 @@
           </div>
           <!-- Nama -->
           <div class="font-semibold text-base leading-snug truncate">
-            {{ p.nama === '—' ? '— (belum diisi)' : p.nama }}
+            {{ p.nama === '—' ? 'Sedang dalam pendataan' : p.nama }}
           </div>
           <!-- Sub-info jika ada -->
           <div v-if="p.kontak" class="text-xs muted mt-1">📱 {{ p.kontak }}</div>
@@ -49,8 +49,8 @@
       </div>
     </div>
 
-    <!-- Section Kontak Darurat -->
-    <div>
+    <!-- Section Kontak Darurat — hanya tampil jika ada nomor yang sudah diisi -->
+    <div v-if="hasKontakDarurat">
       <h2 class="font-display text-xl font-bold mb-2">Kontak Darurat</h2>
       <p class="muted text-sm mb-5">
         Hubungi Ketua RT setempat untuk kebutuhan mendesak di lingkungan Anda.
@@ -130,6 +130,12 @@ const kontakDarurat = [
   { rt: 'RT 03', nama: '— (placeholder)', hp: '08xx-xxxx-xxxx' },
   { rt: 'RT 04', nama: '— (placeholder)', hp: '08xx-xxxx-xxxx' },
 ]
+
+// BUG-006: sembunyikan seksi kontak darurat jika semua nomor masih placeholder
+const PLACEHOLDER_HP = /^08xx/i
+const hasKontakDarurat = computed(() =>
+  kontakDarurat.some((rt) => rt.hp && !PLACEHOLDER_HP.test(rt.hp)),
+)
 
 // Helper: ambil inisial dari nama
 function initials(nama: string): string {
