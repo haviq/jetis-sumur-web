@@ -94,7 +94,7 @@
           <div class="flex items-start justify-between">
             <div>
               <div class="font-display text-lg font-bold">RT {{ rt.rt }}</div>
-              <div class="text-xs muted">RW {{ rt.rw || '01' }}</div>
+              <div class="text-xs muted">RW {{ rt.rw || '09' }}</div>
             </div>
             <NuxtLink
               :to="`/ops/warga?rt=${rt.rt}`"
@@ -274,7 +274,7 @@ const visibleRts = computed<RtRow[]>(() => {
     .filter((r) => scope.length === 0 || scope.includes(r.rt))
     .map((r) => ({
       rt: r.rt,
-      rw: rtRwMap.get(r.rt) ?? '01',
+      rw: rtRwMap.get(r.rt) ?? '09',
       kk: r.kk,
       jiwa: r.jiwa,
       laki: lakiByRt.get(r.rt) ?? 0,

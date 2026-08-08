@@ -35,7 +35,7 @@ export function defaultMaster(): MasterItem[] {
     'Lainnya',
   ])
   push('rt', ['01', '02', '03', '04'])
-  push('rw', ['01'])
+  push('rw', ['09', '10'])
   push('status_rumah', ['Milik Sendiri', 'Kontrak', 'Menumpang', 'Lainnya'])
   return rows
 }
@@ -85,7 +85,7 @@ export function defaultKeluarga(): Keluarga[] {
       nomorKk: '3404010101010001',
       kepalaKeluarga: 'Sutrisno',
       rt: '01',
-      rw: '01',
+      rw: '09',
       alamat: 'Jetis Sumur RT 01',
       statusRumah: 'Milik Sendiri',
       createdAt: t,
@@ -96,7 +96,7 @@ export function defaultKeluarga(): Keluarga[] {
       nomorKk: '3404010101010002',
       kepalaKeluarga: 'Wagimin',
       rt: '02',
-      rw: '01',
+      rw: '09',
       alamat: 'Jetis Sumur RT 02',
       statusRumah: 'Milik Sendiri',
       createdAt: t,
@@ -107,7 +107,7 @@ export function defaultKeluarga(): Keluarga[] {
       nomorKk: '3404010101010003',
       kepalaKeluarga: 'Siti Aminah',
       rt: '03',
-      rw: '01',
+      rw: '10',
       alamat: 'Jetis Sumur RT 03',
       statusRumah: 'Menumpang',
       createdAt: t,
@@ -118,7 +118,7 @@ export function defaultKeluarga(): Keluarga[] {
       nomorKk: '3404010101010004',
       kepalaKeluarga: 'Bambang Hartono',
       rt: '04',
-      rw: '01',
+      rw: '10',
       alamat: 'Jetis Sumur RT 04',
       statusRumah: 'Milik Sendiri',
       createdAt: t,

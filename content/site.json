@@ -13,7 +13,8 @@
     "provinsi": "DI Yogyakarta"
   },
   "rtList": ["01", "02", "03", "04"],
-  "rwDefault": "01",
+  "rwDefault": "09",
+  "rwList": ["09", "10"],
   "whatsapp": "",
   "email": "",
   "jamLayanan": "Senin–Jumat 08.00–14.00 WIB",

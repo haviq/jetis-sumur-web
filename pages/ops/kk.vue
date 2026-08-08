@@ -190,7 +190,7 @@ const form = reactive({
   nomorKk: '',
   kepalaKeluarga: '',
   rt: '01',
-  rw: '01',
+  rw: '09',
   alamat: '',
   statusRumah: '',
 })
@@ -230,7 +230,7 @@ function openForm(k?: any) {
   form.nomorKk = k?.nomorKk || ''
   form.kepalaKeluarga = k?.kepalaKeluarga || ''
   form.rt = k?.rt || '01'
-  form.rw = k?.rw || '01'
+  form.rw = k?.rw || '09'
   form.alamat = k?.alamat || ''
   form.statusRumah = k?.statusRumah || ''
   show.value = true

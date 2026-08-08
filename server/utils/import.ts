@@ -114,7 +114,7 @@ export async function importKeluargaRows(
         nomorKk,
         kepalaKeluarga: kepala,
         rt: (r.rt || prev?.rt || '01').toString().padStart(2, '0'),
-        rw: (r.rw || prev?.rw || '01').toString().padStart(2, '0'),
+        rw: (r.rw || prev?.rw || '09').toString().padStart(2, '0'),
         alamat: alamat || prev?.alamat || '-',
         statusRumah: r.status_rumah || r.statusRumah || undefined,
       },
