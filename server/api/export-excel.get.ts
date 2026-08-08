@@ -42,12 +42,22 @@ export default defineEventHandler(async (event) => {
   const q = getQuery(event)
   const type = String(q.type || 'warga')
   const scope = scopeRts(user)
+  
+  // Filter RT custom
+  let targetRt = q.rt ? String(q.rt).trim().padStart(2, '0') : undefined
+  if (targetRt) {
+    // Jika ada scope, pastikan targetRt termasuk dalam scope operator
+    if (scope?.length && !scope.includes(targetRt)) {
+      throw createError({ statusCode: 403, statusMessage: 'forbidden_scope_rt' })
+    }
+  }
+
   const date = todayStr()
 
   // ── Warga ──────────────────────────────────────────────────────────────────
   if (type === 'warga') {
-    const kkMap = new Map(listKeluarga({ scope }).map((k) => [k.nomorKk, k]))
-    const rows = listWarga({ scope })
+    const kkMap = new Map(listKeluarga({ scope, rt: targetRt }).map((k) => [k.nomorKk, k]))
+    const rows = listWarga({ scope, rt: targetRt })
 
     const csv = toCsvExcel(
       [
@@ -111,7 +121,7 @@ export default defineEventHandler(async (event) => {
 
   // ── Kartu Keluarga ─────────────────────────────────────────────────────────
   if (type === 'kk') {
-    const rows = listKeluarga({ scope })
+    const rows = listKeluarga({ scope, rt: targetRt })
 
     const csv = toCsvExcel(
       [

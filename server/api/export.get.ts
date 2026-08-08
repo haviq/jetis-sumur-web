@@ -6,15 +6,23 @@ export default defineEventHandler(async (event) => {
   await ensureHydrated()
   const q = getQuery(event)
   const type = String(q.type || 'warga')
+  const scope = scopeRts(user)
+
+  let targetRt = q.rt ? String(q.rt).trim().padStart(2, '0') : undefined
+  if (targetRt) {
+    if (scope?.length && !scope.includes(targetRt)) {
+      throw createError({ statusCode: 403, statusMessage: 'forbidden_scope_rt' })
+    }
+  }
 
   // type=excel → forward to the Excel-compatible CSV endpoint (BOM + semicolon)
   if (type === 'excel') {
     const subType = q.subtype ? String(q.subtype) : 'warga'
-    return sendRedirect(event, `/api/export-excel?type=${subType}`, 302)
+    return sendRedirect(event, `/api/export-excel?type=${subType}${targetRt ? `&rt=${targetRt}` : ''}`, 302)
   }
 
   if (type === 'kk') {
-    const rows = listKeluarga()
+    const rows = listKeluarga({ scope, rt: targetRt })
     const csv = toCsv(
       ['id', 'nomor_kk', 'kepala', 'rt', 'rw', 'alamat', 'status_rumah'],
       rows.map((r) => [r.id, r.nomorKk, r.kepalaKeluarga, r.rt, r.rw, r.alamat, r.statusRumah || '']),
@@ -57,8 +65,8 @@ export default defineEventHandler(async (event) => {
     return csv
   }
 
-  const kkMap = new Map(listKeluarga().map((k) => [k.nomorKk, k]))
-  const rows = listWarga()
+  const kkMap = new Map(listKeluarga({ scope, rt: targetRt }).map((k) => [k.nomorKk, k]))
+  const rows = listWarga({ scope, rt: targetRt })
   const csv = toCsv(
     [
       'nik',

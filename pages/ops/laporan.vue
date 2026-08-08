@@ -40,12 +40,19 @@
       </div>
 
       <h2 class="font-semibold mt-8 mb-3">Export CSV</h2>
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-sm font-semibold">Filter RT:</span>
+        <select v-model="selectedRt" class="input py-1 px-3 max-w-[150px] text-sm">
+          <option value="">Semua RT</option>
+          <option v-for="rt in rtList" :key="rt" :value="rt">RT {{ rt }}</option>
+        </select>
+      </div>
       <div class="grid gap-3 sm:grid-cols-2">
         <a
           v-for="x in exports"
           :key="x.type"
           class="card card-hover p-5"
-          :href="`/api/export?type=${x.type}`"
+          :href="`/api/export?type=${x.type}${selectedRt ? `&rt=${selectedRt}` : ''}`"
           target="_blank"
           rel="noopener"
         >
@@ -78,6 +85,9 @@
 definePageMeta({ layout: 'ops' })
 useHead({ title: 'Ops · Laporan' })
 const auth = useAuthStore()
+const selectedRt = ref('')
+const rtList = ['01', '02', '03', '04']
+
 const exports = [
   { type: 'warga', title: 'Rekap warga', desc: 'Seluruh jiwa + RT/RW/kepala KK' },
   { type: 'kk', title: 'Rekap KK', desc: 'Daftar kartu keluarga' },
