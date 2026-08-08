@@ -9,6 +9,7 @@ import {
   getKeluargaByNomor,
   upsertKeluarga,
   upsertWarga,
+  getRwFromRt,
 } from './db'
 
 /**
@@ -108,13 +109,14 @@ export async function importKeluargaRows(
       continue
     }
     const prev = getKeluargaByNomor(nomorKk)
+    const rt = (r.rt || prev?.rt || '01').toString().padStart(2, '0')
     await upsertKeluarga(
       {
         id: prev?.id,
         nomorKk,
         kepalaKeluarga: kepala,
-        rt: (r.rt || prev?.rt || '01').toString().padStart(2, '0'),
-        rw: (r.rw || prev?.rw || '09').toString().padStart(2, '0'),
+        rt,
+        rw: getRwFromRt(rt, r.rw || prev?.rw),
         alamat: alamat || prev?.alamat || '-',
         statusRumah: r.status_rumah || r.statusRumah || undefined,
       },

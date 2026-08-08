@@ -11,6 +11,13 @@ import {
   defaultMutasi,
   defaultWarga,
 } from './seed'
+
+export function getRwFromRt(rt: string, currentRw?: string): string {
+  const cleanRt = (rt || '').padStart(2, '0')
+  if (cleanRt === '01' || cleanRt === '02') return '09'
+  if (cleanRt === '03' || cleanRt === '04') return '10'
+  return currentRw || '09'
+}
 import type {
   AdminStats,
   Agenda,
@@ -312,7 +319,7 @@ export async function upsertKeluarga(
     nomorKk: input.nomorKk,
     kepalaKeluarga: input.kepalaKeluarga,
     rt: input.rt,
-    rw: input.rw || '01',
+    rw: getRwFromRt(input.rt, input.rw),
     alamat: input.alamat,
     latitude: input.latitude,
     longitude: input.longitude,

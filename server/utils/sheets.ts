@@ -4,6 +4,7 @@
  */
 import { sheetsConfigured, sheetsEnv, sheetsFetch, ensureSheetTabs } from './google-auth'
 import { normalizeRole } from './auth'
+import { getRwFromRt } from './db'
 import type {
   Akun,
   Berita,
@@ -163,12 +164,13 @@ function parseAkun(o: Record<string, string>): Akun | null {
 
 function parseKeluarga(o: Record<string, string>): Keluarga | null {
   if (!o.id || !o.nomor_kk) return null
+  const rt = o.rt || '01'
   return {
     id: o.id,
     nomorKk: o.nomor_kk,
     kepalaKeluarga: o.kepala_keluarga || '',
-    rt: o.rt || '01',
-    rw: o.rw || '01',
+    rt,
+    rw: getRwFromRt(rt, o.rw),
     alamat: o.alamat || '',
     latitude: o.latitude || undefined,
     longitude: o.longitude || undefined,
