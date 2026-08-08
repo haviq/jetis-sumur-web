@@ -59,15 +59,15 @@
         </div>
       </div>
 
-      <div v-else>
+      <div v-else class="stagger-in">
         <!-- Alert section -->
         <div
           v-if="(stats.portalPending || 0) > 0 || (stats.suratPending || 0) > 0"
-          class="mt-4 card p-4"
-          style="background: var(--emerald-bg, #d1fae5); border-color: var(--emerald, #10b981)"
+          class="mt-4 card p-custom-card border-accent/30 bg-accent-glow"
         >
-          <p class="text-sm font-medium" style="color: var(--emerald, #10b981)">
-            ⚠️ Perhatian:
+          <p class="text-sm font-semibold text-accent-bright flex items-center gap-2">
+            <span>⚠️</span>
+            <span>Perhatian:</span>
             <span v-if="stats.portalPending > 0">{{ stats.portalPending }} portal pending</span>
             <span v-if="stats.portalPending > 0 && stats.suratPending > 0"> · </span>
             <span v-if="stats.suratPending > 0">{{ stats.suratPending }} surat draft</span>
@@ -75,54 +75,54 @@
         </div>
 
         <!-- Stats grid 4 kartu -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          <div class="card p-4">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-custom-grid mt-6">
+          <div class="card p-custom-card hover:border-accent/40 transition-all duration-300">
             <div class="text-xs muted">Total Jiwa</div>
             <div class="flex items-center gap-2 mt-1">
               <span class="text-2xl">👥</span>
-              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.totalPenduduk) }}</span>
+              <span class="stat-num text-3xl font-bold font-display" style="color: var(--accent-bright)">{{ formatNum(stats.totalPenduduk) }}</span>
             </div>
           </div>
-          <div class="card p-4">
+          <div class="card p-custom-card hover:border-accent/40 transition-all duration-300">
             <div class="text-xs muted">Total KK</div>
             <div class="flex items-center gap-2 mt-1">
               <span class="text-2xl">🏠</span>
-              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.totalKk) }}</span>
+              <span class="stat-num text-3xl font-bold font-display">{{ formatNum(stats.totalKk) }}</span>
             </div>
           </div>
-          <div class="card p-4">
+          <div class="card p-custom-card hover:border-accent/40 transition-all duration-300">
             <div class="text-xs muted">Surat Pending</div>
             <div class="flex items-center gap-2 mt-1">
               <span class="text-2xl">📄</span>
-              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.suratPending) }}</span>
+              <span class="stat-num text-3xl font-bold font-display text-warn">{{ formatNum(stats.suratPending) }}</span>
             </div>
           </div>
-          <div class="card p-4">
+          <div class="card p-custom-card hover:border-accent/40 transition-all duration-300">
             <div class="text-xs muted">Portal Pending</div>
             <div class="flex items-center gap-2 mt-1">
               <span class="text-2xl">📥</span>
-              <span class="stat-num text-3xl font-bold">{{ formatNum(stats.portalPending) }}</span>
+              <span class="stat-num text-3xl font-bold font-display text-danger">{{ formatNum(stats.portalPending) }}</span>
             </div>
           </div>
         </div>
 
         <!-- Quick actions -->
         <div class="mt-6">
-          <h2 class="font-semibold mb-3">Aksi Cepat</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <NuxtLink class="card p-4 hover:shadow-md transition-shadow" to="/ops/keluarga">
+          <h2 class="font-semibold font-display text-lg mb-3">Aksi Cepat</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-custom-grid">
+            <NuxtLink class="card p-custom-card hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg transition-all duration-300" to="/ops/keluarga">
               <div class="text-2xl mb-2">➕</div>
               <div class="font-medium text-sm">Tambah KK</div>
             </NuxtLink>
-            <NuxtLink class="card p-4 hover:shadow-md transition-shadow" to="/ops/surat">
+            <NuxtLink class="card p-custom-card hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg transition-all duration-300" to="/ops/surat">
               <div class="text-2xl mb-2">✍️</div>
               <div class="font-medium text-sm">Buat Surat</div>
             </NuxtLink>
-            <NuxtLink class="card p-4 hover:shadow-md transition-shadow" to="/ops/portal">
+            <NuxtLink class="card p-custom-card hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg transition-all duration-300" to="/ops/portal">
               <div class="text-2xl mb-2">👁️</div>
               <div class="font-medium text-sm">Lihat Portal</div>
             </NuxtLink>
-            <a class="card p-4 hover:shadow-md transition-shadow" href="/api/export?type=warga" target="_blank">
+            <a class="card p-custom-card hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg transition-all duration-300" href="/api/export?type=warga" target="_blank">
               <div class="text-2xl mb-2">📊</div>
               <div class="font-medium text-sm">Export CSV</div>
             </a>
@@ -130,14 +130,14 @@
         </div>
 
         <!-- Grafik mini distribusi per RT -->
-        <div class="card p-5 mt-6">
-          <h2 class="font-semibold mb-4">Distribusi per RT</h2>
+        <div class="card p-custom-card mt-6">
+          <h2 class="font-semibold font-display text-lg mb-4">Distribusi per RT</h2>
           <div class="space-y-3">
             <div v-for="rt in stats.perRt || []" :key="rt.rt" class="flex items-center gap-3">
               <div class="text-sm font-medium w-12">RT {{ rt.rt }}</div>
-              <div class="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden relative">
+              <div class="flex-1 bg-surface-soft rounded-full h-6 overflow-hidden relative border border-border/20">
                 <div
-                  class="h-full rounded-full flex items-center justify-end px-2 text-xs font-medium text-white transition-all"
+                  class="h-full rounded-full flex items-center justify-end px-2 text-xs font-semibold text-black transition-all duration-700"
                   :style="{
                     width: maxRtJiwa > 0 ? `${(rt.jiwa / maxRtJiwa) * 100}%` : '0%',
                     background: 'var(--accent, #3b82f6)',
@@ -147,16 +147,16 @@
                   {{ rt.jiwa }}
                 </div>
               </div>
-              <div class="text-xs muted w-16 text-right">{{ rt.kk }} KK</div>
+              <div class="text-xs muted w-16 text-right font-mono">{{ rt.kk }} KK</div>
             </div>
             <div v-if="!(stats.perRt || []).length" class="muted text-sm">Belum ada data RT.</div>
           </div>
         </div>
 
         <!-- Activity feed -->
-        <div class="grid gap-4 mt-6 lg:grid-cols-2">
-          <div class="card p-5">
-            <h2 class="font-semibold mb-3">Aktivitas Terbaru</h2>
+        <div class="grid gap-custom-grid mt-6 lg:grid-cols-2">
+          <div class="card p-custom-card">
+            <h2 class="font-semibold font-display text-lg mb-3">Aktivitas Terbaru</h2>
             <ul class="space-y-2 text-sm max-h-64 overflow-auto">
               <li
                 v-for="l in logs"
@@ -171,8 +171,8 @@
             </ul>
           </div>
 
-          <div class="card p-5">
-            <h2 class="font-semibold mb-3">Mutasi Terbaru</h2>
+          <div class="card p-custom-card">
+            <h2 class="font-semibold font-display text-lg mb-3">Mutasi Terbaru</h2>
             <ul class="space-y-2 text-sm max-h-64 overflow-auto">
               <li
                 v-for="m in stats.recentMutasi || []"
