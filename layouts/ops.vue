@@ -56,6 +56,7 @@
           <NuxtLink to="/ops/peta" class="nav-link" :class="{ 'router-link-active': isActive('/ops/peta') }">Peta</NuxtLink>
           <NuxtLink to="/ops/laporan" class="nav-link" :class="{ 'router-link-active': isActive('/ops/laporan') }">Laporan</NuxtLink>
           <NuxtLink to="/ops/dashboard-rt" class="nav-link" :class="{ 'router-link-active': isActive('/ops/dashboard-rt') }">Dashboard RT</NuxtLink>
+          <NuxtLink to="/ops/anomali" class="nav-link" :class="{ 'router-link-active': isActive('/ops/anomali') }">Kualitas Data</NuxtLink>
 
           <!-- Separator + Group: Admin (hanya admin+) -->
           <template v-if="auth.isAdmin">
