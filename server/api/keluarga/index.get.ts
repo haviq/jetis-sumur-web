@@ -6,13 +6,16 @@ export default defineEventHandler(async (event) => {
   await ensureHydrated()
   const q = getQuery(event)
   const id = q.id ? String(q.id) : undefined
+  const scope = scopeRts(user)
   if (id) {
     const items = listKeluarga()
     const kk = items.find((k) => k.id === id) || null
     if (!kk) throw createError({ statusCode: 404, statusMessage: 'not_found' })
+    if (scope?.length && !scope.includes(kk.rt.padStart(2, '0'))) {
+      throw createError({ statusCode: 403, statusMessage: 'forbidden_scope' })
+    }
     return { ok: true, kk, warga: listWarga({ nomorKk: kk.nomorKk }) }
   }
-  const scope = scopeRts(user)
   let rt = q.rt ? String(q.rt) : undefined
   if (scope?.length) {
     const sc = new Set(scope)

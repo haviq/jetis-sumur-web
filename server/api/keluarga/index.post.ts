@@ -5,13 +5,36 @@ export default defineEventHandler(async (event) => {
   }
   const body = await readBody<Record<string, unknown>>(event)
   const action = String(body?.action || 'upsert')
+  const scope = scopeRts(user)
+
   if (action === 'delete') {
-    const ok = await deleteKeluarga(String(body.id || ''), user)
+    const targetId = String(body.id || '')
+    if (scope?.length) {
+      const current = getKeluargaById(targetId)
+      if (current && !scope.includes(current.rt.padStart(2, '0'))) {
+        throw createError({ statusCode: 403, statusMessage: 'forbidden_scope' })
+      }
+    }
+    const ok = await deleteKeluarga(targetId, user)
     return { ok }
   }
   const nomorKk = String(body.nomorKk || '').trim()
   const kepalaKeluarga = String(body.kepalaKeluarga || '').trim()
   const alamat = String(body.alamat || '').trim()
+  const targetRt = String(body.rt || '01').padStart(2, '0')
+
+  if (scope?.length) {
+    if (!scope.includes(targetRt)) {
+      throw createError({ statusCode: 403, statusMessage: 'forbidden_scope_target_rt' })
+    }
+    if (body.id) {
+      const current = getKeluargaById(String(body.id))
+      if (current && !scope.includes(current.rt.padStart(2, '0'))) {
+        throw createError({ statusCode: 403, statusMessage: 'forbidden_scope_current_rt' })
+      }
+    }
+  }
+
   if (!isNomorKk(nomorKk) || kepalaKeluarga.length < 3 || alamat.length < 3) {
     throw createError({ statusCode: 400, statusMessage: 'invalid_payload' })
   }
@@ -20,7 +43,7 @@ export default defineEventHandler(async (event) => {
       id: body.id ? String(body.id) : undefined,
       nomorKk,
       kepalaKeluarga,
-      rt: String(body.rt || '01'),
+      rt: targetRt,
       rw: String(body.rw || '01'),
       alamat,
       latitude: body.latitude ? String(body.latitude) : undefined,

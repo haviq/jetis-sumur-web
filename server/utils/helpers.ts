@@ -1,16 +1,7 @@
 import site from '../../content/site.json'
-import { isNik as vIsNik, isNomorKk as vIsNomorKk } from './validate'
 
 export function getSite() {
   return site
-}
-
-export function isNik(v: string): boolean {
-  return vIsNik(v)
-}
-
-export function isNomorKk(v: string): boolean {
-  return vIsNomorKk(v)
 }
 
 export function csvEscape(v: string | number | undefined | null): string {
