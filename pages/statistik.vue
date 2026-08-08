@@ -26,33 +26,10 @@
     <!-- ── CHARTS GRID ── -->
     <div v-else class="grid gap-4 mt-8 lg:grid-cols-2">
 
-      <!-- Per RT bar chart -->
+      <!-- Jenis Kelamin -->
       <div class="card p-5">
-        <h2 class="font-semibold mb-4">Per RT</h2>
-        <div class="space-y-3">
-          <div
-            v-for="r in stats?.perRt || []"
-            :key="r.rt"
-            class="grid grid-cols-[3.5rem_1fr_2.5rem] items-center gap-3 text-sm"
-          >
-            <span class="muted">RT {{ r.rt }}</span>
-            <div class="bar-track">
-              <div
-                class="bar-fill"
-                :style="{ width: bar(r.jiwa) + '%' }"
-                :title="`RT ${r.rt}: ${r.jiwa} jiwa (${bar(r.jiwa)}%)`"
-              />
-            </div>
-            <span class="text-right font-semibold tabular-nums">{{ r.jiwa }}</span>
-          </div>
-        </div>
-        <!-- BUG-004: tampilkan warga tanpa data RT -->
-        <p
-          v-if="stats?.tanpaRt && stats.tanpaRt > 0"
-          class="mt-3 text-xs muted"
-        >
-          ⚠ {{ stats.tanpaRt }} jiwa tidak memiliki data RT
-        </p>
+        <h2 class="font-semibold mb-3">Jenis Kelamin</h2>
+        <DonutChart :items="genderItems" :colors="['#00d4ff', '#ea4b71']" />
       </div>
 
       <!-- Kelompok umur -->
@@ -71,27 +48,10 @@
         </div>
       </div>
 
-      <!-- Agama — donut simulasi CSS -->
+      <!-- Agama -->
       <div class="card p-5">
         <h2 class="font-semibold mb-3">Agama</h2>
-        <ul class="space-y-2.5 text-sm">
-          <li
-            v-for="a in stats?.agama || []"
-            :key="a.label"
-            class="flex flex-col gap-1"
-          >
-            <div class="flex justify-between">
-              <span class="muted">{{ a.label }}</span>
-              <span class="font-semibold tabular-nums">{{ a.count }}</span>
-            </div>
-            <div class="bar-track">
-              <div
-                class="bar-fill bar-fill--accent2"
-                :style="{ width: pct(a.count, totalAgama) + '%' }"
-              />
-            </div>
-          </li>
-        </ul>
+        <DonutChart :items="religionItems" />
       </div>
 
       <!-- Pendidikan — donut simulasi CSS -->
@@ -115,6 +75,34 @@
             </div>
           </li>
         </ul>
+      </div>
+
+      <!-- Per RT bar chart -->
+      <div class="card p-5 lg:col-span-2">
+        <h2 class="font-semibold mb-4">Per RT</h2>
+        <div class="space-y-3">
+          <div
+            v-for="r in stats?.perRt || []"
+            :key="r.rt"
+            class="grid grid-cols-[3.5rem_1fr_2.5rem] items-center gap-3 text-sm"
+          >
+            <span class="muted">RT {{ r.rt }}</span>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                :style="{ width: bar(r.jiwa) + '%' }"
+                :title="`RT ${r.rt}: ${r.jiwa} jiwa (${bar(r.jiwa)}%)`"
+              />
+            </div>
+            <span class="text-right font-semibold tabular-nums">{{ r.jiwa }}</span>
+          </div>
+        </div>
+        <p
+          v-if="stats?.tanpaRt && stats.tanpaRt > 0"
+          class="mt-3 text-xs muted"
+        >
+          ⚠ {{ stats.tanpaRt }} jiwa tidak memiliki data RT
+        </p>
       </div>
 
       <!-- Pekerjaan -->
@@ -171,6 +159,18 @@ const age = computed(() => [
   { label: 'Dewasa', value: stats.value?.dewasa },
   { label: 'Lansia', value: stats.value?.lansia },
 ])
+
+const genderItems = computed(() => [
+  { label: 'Laki-laki', value: stats.value?.laki || 0 },
+  { label: 'Perempuan', value: stats.value?.perempuan || 0 },
+])
+
+const religionItems = computed(() => {
+  return (stats.value?.agama || []).map((a: any) => ({
+    label: a.label,
+    value: Number(a.count) || 0,
+  }))
+})
 
 const maxJiwa = computed(() =>
   Math.max(1, ...(stats.value?.perRt || []).map((r: any) => r.jiwa || 0)),
