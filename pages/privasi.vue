@@ -11,8 +11,8 @@
       </div>
       <h1 class="font-display text-3xl sm:text-4xl font-bold">Kebijakan Privasi</h1>
       <p class="muted text-sm mt-3">
-        Berlaku efektif: <strong>1 Januari 2025</strong> · Padukuhan Jetis Sumur, Kalurahan Sendangtirto,
-        Kapanewon Berbah, D.I. Yogyakarta
+        Berlaku efektif: <strong>1 Januari 2025</strong> · Padukuhan Jetis Sumur, Kalurahan Glagaharjo,
+        Kapanewon Cangkringan, D.I. Yogyakarta 55583
       </p>
     </div>
 
@@ -145,7 +145,7 @@
           silakan hubungi perangkat padukuhan melalui:
         </p>
         <ul class="space-y-1.5 pl-1">
-          <li class="flex gap-3 muted"><span>🏠</span> Kantor Padukuhan Jetis Sumur, Sendangtirto, Berbah, Sleman</li>
+          <li class="flex gap-3 muted"><span>🏠</span> Kantor Padukuhan Jetis Sumur, Glagaharjo, Cangkringan, Sleman 55583</li>
           <li class="flex gap-3 muted"><span>🕐</span> Jam layanan: Senin–Jumat, 08.00–14.00 WIB</li>
           <li class="flex gap-3 muted"><span>📋</span> Portal pengajuan: <NuxtLink to="/layanan" class="underline" style="color: var(--accent)">Layanan Warga</NuxtLink></li>
         </ul>

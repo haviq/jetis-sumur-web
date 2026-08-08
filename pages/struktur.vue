@@ -11,7 +11,7 @@
       </div>
       <h1 class="font-display text-3xl sm:text-4xl font-bold">Struktur Organisasi</h1>
       <p class="muted mt-3 max-w-xl text-sm leading-relaxed">
-        Perangkat Padukuhan Jetis Sumur, Kalurahan Sendangtirto, Kapanewon Berbah,
+        Perangkat Padukuhan Jetis Sumur, Kalurahan Glagaharjo, Kapanewon Cangkringan,
         D.I. Yogyakarta — periode berjalan.
       </p>
     </div>

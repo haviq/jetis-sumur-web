@@ -24,6 +24,7 @@
             <tr class="text-left muted border-b" style="border-color: var(--border)">
               <th class="p-3">Waktu</th>
               <th class="p-3">Nama / NIK</th>
+              <th class="p-3">Kontak</th>
               <th class="p-3">Jenis</th>
               <th class="p-3">Keperluan</th>
               <th class="p-3">Status</th>
@@ -37,6 +38,19 @@
                 <div class="font-medium">{{ it.nama }}</div>
                 <div class="font-mono text-xs muted">{{ it.nik }}</div>
               </td>
+              <td class="p-3">
+                <div v-if="it.noHp" class="flex items-center gap-1.5">
+                  <span class="text-xs font-mono">{{ it.noHp }}</span>
+                  <button 
+                    @click="sendWa(it)" 
+                    title="Kirim Notifikasi WhatsApp"
+                    class="inline-flex items-center justify-center p-1 rounded hover:bg-emerald-500/10 text-emerald-500"
+                  >
+                    💬
+                  </button>
+                </div>
+                <div v-else class="text-xs muted">—</div>
+              </td>
               <td class="p-3">{{ it.jenis }}</td>
               <td class="p-3 max-w-[220px]">{{ it.keperluan }}</td>
               <td class="p-3"><span class="badge">{{ it.status }}</span></td>
@@ -47,7 +61,7 @@
               </td>
             </tr>
             <tr v-if="!items.length">
-              <td colspan="6" class="p-6 text-center muted">Kosong</td>
+              <td colspan="7" class="p-6 text-center muted">Kosong</td>
             </tr>
           </tbody>
         </table>
@@ -83,6 +97,33 @@ async function setStatus(it: any, status: string) {
     body: { action: 'update', id: it.id, status },
   })
   await load()
+}
+
+async function sendWa(it: any) {
+  let template = ''
+  if (it.status === 'menunggu') {
+    template = `Halo ${it.nama}, pengajuan dokumen Anda (${it.keperluan}) telah kami terima dan sedang mengantri untuk diverifikasi. Terima kasih.`
+  } else if (it.status === 'diproses') {
+    template = `Halo ${it.nama}, pengajuan dokumen Anda (${it.keperluan}) sedang dalam proses pengerjaan oleh petugas. Terima kasih.`
+  } else if (it.status === 'selesai') {
+    template = `Halo ${it.nama}, pengajuan dokumen Anda (${it.keperluan}) telah SELESAI diproses. Silakan mengambil fisik dokumen di Balai Padukuhan Jetis Sumur, Glagaharjo pada jam layanan. Terima kasih.`
+  } else if (it.status === 'ditolak') {
+    template = `Halo ${it.nama}, pengajuan dokumen Anda (${it.keperluan}) belum dapat kami setujui. Mohon hubungi Balai Padukuhan untuk informasi lebih lanjut. Terima kasih.`
+  } else {
+    template = `Halo ${it.nama}, informasi mengenai pengajuan dokumen Anda (${it.keperluan}). Status saat ini: ${it.status}.`
+  }
+
+  try {
+    const res = await $fetch<{ ok: boolean; url: string }>('/api/wa', {
+      method: 'POST',
+      body: { to: it.noHp, message: template, kind: 'portal_update' }
+    })
+    if (res.ok && res.url) {
+      window.open(res.url, '_blank')
+    }
+  } catch (e: any) {
+    alert(e.message || 'Gagal memicu tautan WhatsApp.')
+  }
 }
 
 onMounted(async () => {

@@ -32,7 +32,7 @@
       </div>
 
       <!-- Tab strip: scroll horizontal di semua viewport, separator antar group di desktop -->
-      <nav v-if="auth.user" class="container-page ops-nav-wrap" aria-label="Menu ops">
+      <nav v-if="auth.user" class="container-page ops-nav-wrap hidden md:block" aria-label="Menu ops">
         <div class="ops-nav-scroll">
           <!-- Group: Ringkasan + Cari -->
           <NuxtLink to="/ops" class="nav-link" :class="{ 'router-link-active': isActive('/ops') }">Ringkasan</NuxtLink>
@@ -65,6 +65,7 @@
             <NuxtLink to="/ops/backup" class="nav-link" :class="{ 'router-link-active': isActive('/ops/backup') }">Backup</NuxtLink>
             <NuxtLink to="/ops/master" class="nav-link" :class="{ 'router-link-active': isActive('/ops/master') }">Master</NuxtLink>
             <NuxtLink to="/ops/log" class="nav-link" :class="{ 'router-link-active': isActive('/ops/log') }">Audit</NuxtLink>
+            <NuxtLink to="/ops/broadcast" class="nav-link" :class="{ 'router-link-active': isActive('/ops/broadcast') }">Broadcast WA</NuxtLink>
             <NuxtLink to="/ops/laporan-pejabat" class="nav-link" :class="{ 'router-link-active': isActive('/ops/laporan-pejabat') }">Rek. Pejabat</NuxtLink>
             <NuxtLink to="/ops/notifikasi" class="nav-link" :class="{ 'router-link-active': isActive('/ops/notifikasi') }">Notif</NuxtLink>
           </template>
@@ -79,9 +80,35 @@
       </nav>
     </div>
 
-    <div class="container-page py-6 page-frame">
+    <div class="container-page pt-6 pb-20 md:pb-6 page-frame">
       <slot />
     </div>
+
+    <!-- Bottom Navigation Bar for Mobile View -->
+    <nav v-if="auth.user" class="md:hidden fixed bottom-0 left-0 right-0 border-t z-40 bg-neutral-900/90 backdrop-blur-md" style="border-color: var(--border); background: color-mix(in srgb, var(--surface) 95%, transparent)">
+      <div class="flex items-center justify-around h-16 px-2 text-[10px] font-semibold text-center">
+        <NuxtLink to="/ops" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-xs transition-colors" :class="isActive('/ops') ? 'text-primary' : 'muted'">
+          <span class="text-lg">🏠</span>
+          <span class="mt-0.5">Beranda</span>
+        </NuxtLink>
+        <NuxtLink to="/ops/cari" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-xs transition-colors" :class="isActive('/ops/cari') ? 'text-primary' : 'muted'">
+          <span class="text-lg">🔍</span>
+          <span class="mt-0.5">Cari</span>
+        </NuxtLink>
+        <NuxtLink to="/ops/surat" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-xs transition-colors" :class="isActive('/ops/surat') ? 'text-primary' : 'muted'">
+          <span class="text-lg">📄</span>
+          <span class="mt-0.5">Surat</span>
+        </NuxtLink>
+        <NuxtLink to="/ops/warga" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-xs transition-colors" :class="isActive('/ops/warga') ? 'text-primary' : 'muted'">
+          <span class="text-lg">📂</span>
+          <span class="mt-0.5">Warga</span>
+        </NuxtLink>
+        <NuxtLink to="/ops/laporan" class="flex flex-col items-center justify-center flex-1 h-full py-1 text-xs transition-colors" :class="isActive('/ops/laporan') ? 'text-primary' : 'muted'">
+          <span class="text-lg">📊</span>
+          <span class="mt-0.5">Laporan</span>
+        </NuxtLink>
+      </div>
+    </nav>
   </div>
 </template>
 
